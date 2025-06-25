@@ -423,7 +423,17 @@ ${result.content}
       )
     }
 
-    return files
+    // Sort files using natural/alphanumeric sorting to handle numbers correctly
+    // This ensures task_01.2 comes before task_01.12
+    return files.sort((a, b) => this.naturalSort(a, b))
+  }
+
+  /**
+   * Natural/alphanumeric sorting function that handles numbers correctly
+   * Ensures task_01.2 comes before task_01.12
+   */
+  private naturalSort(a: string, b: string): number {
+    return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
   }
 }
 
