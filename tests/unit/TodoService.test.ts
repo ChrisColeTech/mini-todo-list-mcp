@@ -158,6 +158,8 @@ describe('TodoService', () => {
 
   describe('bulkAddTodos', () => {
     it('should create todos from folder contents', async () => {
+      todoService.clearAllTodos(); // Ensure clean state
+      
       const bulkDir = join(tempDir, 'bulk-test');
       mkdirSync(bulkDir, { recursive: true });
       
