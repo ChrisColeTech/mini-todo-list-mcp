@@ -1,6 +1,6 @@
 {
   "name": "mini-todo-list-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A streamlined Model Context Protocol (MCP) server for todo management with essential CRUD operations, bulk functionality, and workflow support",
   "type": "module",
   "main": "dist/index.js",
@@ -16,7 +16,7 @@
   },
   "keywords": [
     "mcp",
-    "model-context-protocol", 
+    "model-context-protocol",
     "todo",
     "task-management",
     "claude",
