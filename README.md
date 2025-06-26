@@ -37,27 +37,58 @@ Files without extensions are treated as plain text.
 
 ## Quick Setup
 
-1. **Install globally:**
-   ```bash
-   npm install -g mini-todo-list-mcp
-   ```
+### Option 1: Global Install (Recommended)
+```bash
+npm install -g mini-todo-list-mcp
+```
 
-2. **Add to Claude Desktop config:**
-   ```json
-   {
-     "mcpServers": {
-       "mini-todo": {
-         "command": "node",
-         "args": ["/path/to/node_modules/mini-todo-list-mcp/dist/index.js"]
-       }
-     }
-   }
-   ```
+**Claude Desktop config:**
+```json
+{
+  "mcpServers": {
+    "mini-todo": {
+      "command": "mini-todo-list-mcp"
+    }
+  }
+}
+```
 
-3. **Start using in Claude:**
-   - "Create a todo to implement user authentication"
-   - "Use bulk-add-todos to create tasks from all files in /my/project"
-   - "Get my next task to work on"
+### Option 2: Use with npx (No Installation)
+**Claude Desktop config:**
+```json
+{
+  "mcpServers": {
+    "mini-todo": {
+      "command": "npx",
+      "args": ["mini-todo-list-mcp"]
+    }
+  }
+}
+```
+
+### Option 3: Local Install
+```bash
+npm install mini-todo-list-mcp
+```
+
+**Claude Desktop config:**
+```json
+{
+  "mcpServers": {
+    "mini-todo": {
+      "command": "node",
+      "args": ["./node_modules/mini-todo-list-mcp/dist/index.js"]
+    }
+  }
+}
+```
+
+## Start Using
+
+Once configured, you can use these commands in Claude:
+- "Create a todo to implement user authentication"
+- "Use bulk-add-todos to create tasks from all files in /my/project"
+- "Get my next task to work on"
 
 ## Core Tools
 
