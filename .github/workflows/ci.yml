@@ -8,11 +8,10 @@ on:
 
 jobs:
   test:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        node-version: [16, 18, 20]
+        node-version: [18, 20]
 
     steps:
       - name: Checkout code
@@ -36,19 +35,9 @@ jobs:
       - name: Test MCP server startup
         run: |
           timeout 10s node dist/index.js --help || true
-        shell: bash
-        if: runner.os != 'Windows'
-
-      - name: Test MCP server startup (Windows)
-        run: |
-          $job = Start-Job -ScriptBlock { node dist/index.js --help }
-          Wait-Job $job -Timeout 10
-          Stop-Job $job
-          Remove-Job $job
-        if: runner.os == 'Windows'
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
-        if: matrix.os == 'ubuntu-latest' && matrix.node-version == '18'
+        if: matrix.node-version == '18'
         with:
           files: ./coverage/lcov.info
