@@ -12,6 +12,33 @@ npm install mini-todo-list-mcp
 
 Model Context Protocol (MCP) lets AI assistants like Claude connect to external tools and data sources. This server provides todo management capabilities directly in your AI conversations.
 
+## Core Tools
+
+### 📝 Task Creation
+| Tool | Purpose | How to Use |
+|------|---------|------------|
+| `create-todo` | Create single task | "Create a todo to fix login bug with OAuth integration details" |
+| `bulk-add-todos` | Create tasks from folder | "Use bulk-add-todos to create tasks from all files in /my/project/src" |
+
+### 🔍 Task Retrieval  
+| Tool | Purpose | How to Use |
+|------|---------|------------|
+| `get-next-todo` | Get next task to work on | "Get my next task" or "What should I work on next?" |
+| `get-todo` | Get specific task details | "Show me the details of todo 5" |
+| `get-next-todo-id` | Get next task ID only | "What's the ID of my next task?" |
+
+### ✏️ Task Management
+| Tool | Purpose | How to Use |
+|------|---------|------------|
+| `update-todo` | Modify existing task | "Update todo 3 to add security requirements" |
+| `complete-todo` | Mark task as done | "Mark todo 5 as completed" or "Complete task 5" |
+| `delete-todo` | Remove task permanently | "Delete todo 7" |
+
+### 🗂️ Bulk Operations
+| Tool | Purpose | How to Use |
+|------|---------|------------|
+| `clear-all-todos` | Start fresh | "Clear all todos and start over" |
+
 ## Features
 
 ✅ **Essential CRUD operations** - Create, read, update, delete todos  
@@ -90,33 +117,6 @@ Once configured, you can use these commands in Claude:
 - "Use bulk-add-todos to create tasks from all files in /my/project"
 - "Get my next task to work on"
 
-## Core Tools
-
-### 📝 Task Creation
-| Tool | Purpose | How to Use |
-|------|---------|------------|
-| `create-todo` | Create single task | "Create a todo to fix login bug with OAuth integration details" |
-| `bulk-add-todos` | Create tasks from folder | "Use bulk-add-todos to create tasks from all files in /my/project/src" |
-
-### 🔍 Task Retrieval  
-| Tool | Purpose | How to Use |
-|------|---------|------------|
-| `get-next-todo` | Get next task to work on | "Get my next task" or "What should I work on next?" |
-| `get-todo` | Get specific task details | "Show me the details of todo 5" |
-| `get-next-todo-id` | Get next task ID only | "What's the ID of my next task?" |
-
-### ✏️ Task Management
-| Tool | Purpose | How to Use |
-|------|---------|------------|
-| `update-todo` | Modify existing task | "Update todo 3 to add security requirements" |
-| `complete-todo` | Mark task as done | "Mark todo 5 as completed" or "Complete task 5" |
-| `delete-todo` | Remove task permanently | "Delete todo 7" |
-
-### 🗂️ Bulk Operations
-| Tool | Purpose | How to Use |
-|------|---------|------------|
-| `clear-all-todos` | Start fresh | "Clear all todos and start over" |
-
 ## Example Workflows
 
 **Sequential Task Processing:**
@@ -137,14 +137,6 @@ Once configured, you can use these commands in Claude:
 1. "Clear all todos and start fresh"
 2. "Create tasks from all files in /my/project/modules" 
 3. "Show me task 1" → Start development with automatic numbering
-
-## Why Mini Version?
-
-- **40% fewer tools** than full version (9 vs 15)
-- **Simple integer IDs** instead of UUIDs (1, 2, 3...)
-- **Lower token usage** for better AI performance  
-- **Focused functionality** on most-used operations
-- **Same power** for core workflows with better speed
 
 ## Documentation
 
