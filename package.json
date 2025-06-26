@@ -31,12 +31,12 @@
   "author": "Mini Todo MCP",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/mini-todo-list-mcp.git"
+    "url": "https://github.com/ChrisColeTech/mini-todo-list-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/mini-todo-list-mcp/issues"
+    "url": "https://github.com/ChrisColeTech/mini-todo-list-mcp/issues"
   },
-  "homepage": "https://github.com/yourusername/mini-todo-list-mcp#readme",
+  "homepage": "https://github.com/ChrisColeTech/mini-todo-list-mcp#readme",
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",

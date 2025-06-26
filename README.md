@@ -103,7 +103,7 @@ Files without extensions are treated as plain text.
 
 ## Documentation
 
-Full documentation with detailed examples: [GitHub Repository](https://github.com/yourusername/mini-todo-list-mcp)
+Full documentation with detailed examples: [GitHub Repository](https://github.com/ChrisColeTech/mini-todo-list-mcp)
 
 ## License
 
