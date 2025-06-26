@@ -92,37 +92,51 @@ Once configured, you can use these commands in Claude:
 
 ## Core Tools
 
-| Tool | Purpose | Example Usage |
-|------|---------|---------------|
-| `create-todo` | Create single task | Create todo for bug fix with detailed description |
-| `bulk-add-todos` | Create tasks from folder | Read all project files and create review tasks |
-| `get-next-todo` | Get next task to work on | Returns lowest numbered incomplete task |
-| `complete-todo` | Mark task as done | Mark task 5 as completed with timestamp |
-| `update-todo` | Modify existing task | Add progress notes to existing task |
-| `get-todo` | Get specific task details | View full details of task 3 |
-| `delete-todo` | Remove task permanently | Delete outdated or duplicate task |
-| `clear-all-todos` | Start fresh | Remove all tasks and reset numbering |
-| `get-next-todo-id` | Get next task ID and number | Quick way to get ID for completion |
+### 📝 Task Creation
+| Tool | Purpose | How to Use |
+|------|---------|------------|
+| `create-todo` | Create single task | "Create a todo to fix login bug with OAuth integration details" |
+| `bulk-add-todos` | Create tasks from folder | "Use bulk-add-todos to create tasks from all files in /my/project/src" |
+
+### 🔍 Task Retrieval  
+| Tool | Purpose | How to Use |
+|------|---------|------------|
+| `get-next-todo` | Get next task to work on | "Get my next task" or "What should I work on next?" |
+| `get-todo` | Get specific task details | "Show me the details of todo 5" |
+| `get-next-todo-id` | Get next task ID only | "What's the ID of my next task?" |
+
+### ✏️ Task Management
+| Tool | Purpose | How to Use |
+|------|---------|------------|
+| `update-todo` | Modify existing task | "Update todo 3 to add security requirements" |
+| `complete-todo` | Mark task as done | "Mark todo 5 as completed" or "Complete task 5" |
+| `delete-todo` | Remove task permanently | "Delete todo 7" |
+
+### 🗂️ Bulk Operations
+| Tool | Purpose | How to Use |
+|------|---------|------------|
+| `clear-all-todos` | Start fresh | "Clear all todos and start over" |
 
 ## Example Workflows
 
 **Sequential Task Processing:**
-1. `bulk-add-todos` → Create tasks from project folder
-2. `get-next-todo` → Get Task 1 
-3. Work on task...
-4. `complete-todo` → Mark Task 1 done
-5. `get-next-todo` → Get Task 2
+1. "Use bulk-add-todos to create tasks from all files in /my/project"
+2. "Get my next task" → Returns Task 1 with full details
+3. Work on the task...
+4. "Mark todo 1 as completed" 
+5. "Get my next task" → Returns Task 2
 6. Repeat until all done
 
-**Code Review:**
-- Use `bulk-add-todos` with `/path/to/changed/files`
-- Each task contains full file content for review
-- Process systematically with `get-next-todo`
+**Code Review Workflow:**
+1. "Use bulk-add-todos with folder /path/to/changed/files"
+2. "What's my next task?" → Review first file with embedded content
+3. "Complete task 1" → Mark review done
+4. "Get next task" → Continue to next file
 
 **Project Setup:**
-- `clear-all-todos` → Start fresh
-- `bulk-add-todos` → Create tasks from project modules
-- Sequential development with automatic task numbering
+1. "Clear all todos and start fresh"
+2. "Create tasks from all files in /my/project/modules" 
+3. "Show me task 1" → Start development with automatic numbering
 
 ## Why Mini Version?
 
