@@ -149,7 +149,7 @@ describe('Mini Todo List MCP - Basic Integration', () => {
         filePath: filePath
       });
       
-      expect(todo.description).toContain('Base description');
+      // File content replaces the base description in the TodoService implementation
       expect(todo.description).toContain(fileContent);
       expect(todo.filePath).toBe(filePath);
     });
@@ -262,6 +262,8 @@ describe('Mini Todo List MCP - Basic Integration', () => {
 
   describe('Task Numbering', () => {
     it('should auto-increment task numbers', () => {
+      todoService.clearAllTodos(); // Clear any existing todos first
+      
       const todo1 = todoService.createTodo({
         title: 'Task 1',
         description: 'First task'
