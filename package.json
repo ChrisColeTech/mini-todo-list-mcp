@@ -4,6 +4,9 @@
   "description": "A streamlined Model Context Protocol (MCP) server for todo management with essential CRUD operations, bulk functionality, and workflow support",
   "type": "module",
   "main": "dist/index.js",
+  "bin": {
+    "mini-todo-list-mcp": "dist/index.js"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
