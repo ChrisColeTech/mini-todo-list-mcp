@@ -24,14 +24,48 @@ class TodoService {
   /**
    * Create a new todo
    */
-  createTodo(data: z.infer<typeof CreateTodoSchema>, filePath?: string, taskNumber?: number): Todo {
+  createTodo(data: z.infer<typeof CreateTodoSchema>, passedFilePath?: string, taskNumber?: number): Todo {
     const db = databaseService.getDb()
+
+    // Determine the final file path and read content if needed
+    const finalFilePath = data.filePath || passedFilePath
+    let finalTitle = data.title
+    let finalDescription = data.description
+
+    // If filePath is provided, read file content and create structured description
+    if (data.filePath) {
+      if (!fs.existsSync(data.filePath)) {
+        throw new Error(`File does not exist: ${data.filePath}`)
+      }
+
+      try {
+        const fileContent = fs.readFileSync(data.filePath, 'utf-8').trim()
+        if (!fileContent) {
+          throw new Error(`File is empty: ${data.filePath}`)
+        }
+
+        // Auto-generate title from filename if not provided meaningfully
+        if (data.title === data.filePath || data.title.trim() === '') {
+          const fileName = path.basename(data.filePath, path.extname(data.filePath))
+          finalTitle = fileName
+        }
+
+        // Override description with file content and metadata
+        finalDescription = `**Source File:** ${data.filePath}
+
+${fileContent}
+
+**When completed, use the complete-todo MCP tool with ID: [ID will be auto-filled]**`
+      } catch (error) {
+        throw new Error(`Failed to read file ${data.filePath}: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      }
+    }
 
     // Check for duplicate title and description combination
     const duplicateCheckStmt = db.prepare(
       'SELECT id FROM todos WHERE title = ? AND description = ?',
     )
-    const existingTodo = duplicateCheckStmt.get(data.title, data.description) as any
+    const existingTodo = duplicateCheckStmt.get(finalTitle, finalDescription) as any
 
     if (existingTodo) {
       throw new Error(
@@ -47,7 +81,7 @@ class TodoService {
       finalTaskNumber = (maxResult?.maxTaskNumber || 0) + 1
     }
 
-    const todoData = createTodo(data, filePath, finalTaskNumber)
+    const todoData = createTodo({ title: finalTitle, description: finalDescription }, finalFilePath, finalTaskNumber)
 
     const stmt = db.prepare(`
       INSERT INTO todos (title, description, completedAt, createdAt, updatedAt, filePath, status, taskNumber)
@@ -65,9 +99,29 @@ class TodoService {
       todoData.taskNumber,
     )
 
+    const todoId = result.lastInsertRowid as number
+
+    // If we read from a file, update the description with the actual ID
+    if (data.filePath) {
+      const updatedDescription = finalDescription.replace(
+        '**When completed, use the complete-todo MCP tool with ID: [ID will be auto-filled]**',
+        `**When completed, use the complete-todo MCP tool:**
+- ID: ${todoId}`
+      )
+
+      const updateStmt = db.prepare('UPDATE todos SET description = ? WHERE id = ?')
+      updateStmt.run(updatedDescription, todoId)
+
+      return {
+        id: todoId,
+        ...todoData,
+        description: updatedDescription,
+      }
+    }
+
     // Return the created todo with the auto-generated ID
     return {
-      id: result.lastInsertRowid as number,
+      id: todoId,
       ...todoData,
     }
   }
@@ -173,10 +227,32 @@ class TodoService {
   }
 
   /**
+   * Get next todo ID and task number
+   */
+  getNextTodoId(): { id: number; taskNumber: number } | null {
+    const db = databaseService.getDb()
+    const stmt = db.prepare(`
+      SELECT id, taskNumber FROM todos 
+      WHERE status != 'Done' 
+      ORDER BY taskNumber ASC
+      LIMIT 1
+    `)
+    const row = stmt.get() as any
+
+    return row ? { id: row.id, taskNumber: row.taskNumber } : null
+  }
+
+  /**
    * Bulk add todos by reading file contents directly (optimized with parallel processing)
    */
   async bulkAddTodos(data: z.infer<typeof BulkAddTodosSchema>): Promise<Todo[]> {
-    const { folderPath } = data
+    const { folderPath, clearAll } = data
+
+    // Clear all existing todos if requested
+    if (clearAll) {
+      const deletedCount = this.clearAllTodos()
+      console.log(`Cleared ${deletedCount} existing todos before bulk add`)
+    }
 
     // Check if folder exists
     if (!fs.existsSync(folderPath)) {

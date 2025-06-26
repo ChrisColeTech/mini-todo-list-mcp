@@ -62,19 +62,20 @@ server.tool(
   {
     title: z.string().min(1, "Title is required"),
     description: z.string().min(1, "Description is required"),
+    filePath: z.string().min(1, "File path is required").optional(),
   },
-  async ({ title, description }) => {
+  async ({ title, description, filePath }) => {
     const result = await safeExecute(() => {
-      const validatedData = CreateTodoSchema.parse({ title, description });
+      const validatedData = CreateTodoSchema.parse({ title, description, filePath });
       const newTodo = todoService.createTodo(validatedData);
-      return formatTodo(newTodo);
+      return `Todo ${newTodo.taskNumber}: ${newTodo.title}`;
     }, "Failed to create todo");
 
     if (result instanceof Error) {
       return createErrorResponse(result.message);
     }
 
-    return createSuccessResponse(`✅ Todo Created:\n\n${result}`);
+    return createSuccessResponse(`✅ Created ${result}`);
   }
 );
 
@@ -129,14 +130,14 @@ server.tool(
         throw new Error(`Todo with ID ${id} not found`);
       }
 
-      return formatTodo(updatedTodo);
+      return `Todo ${updatedTodo.taskNumber}: ${updatedTodo.title}`;
     }, "Failed to update todo");
 
     if (result instanceof Error) {
       return createErrorResponse(result.message);
     }
 
-    return createSuccessResponse(`✅ Todo Updated:\n\n${result}`);
+    return createSuccessResponse(`✅ Updated ${result}`);
   }
 );
 
@@ -158,14 +159,14 @@ server.tool(
         throw new Error(`Todo with ID ${id} not found`);
       }
 
-      return formatTodo(completedTodo);
+      return `Todo ${completedTodo.taskNumber}: ${completedTodo.title}`;
     }, "Failed to complete todo");
 
     if (result instanceof Error) {
       return createErrorResponse(result.message);
     }
 
-    return createSuccessResponse(`✅ Todo Completed:\n\n${result}`);
+    return createSuccessResponse(`✅ ${result} completed`);
   }
 );
 
@@ -231,22 +232,22 @@ server.tool(
 );
 
 /**
- * Tool 7: Get next todo number
+ * Tool 7: Get next todo ID and task number
  */
 server.tool(
-  "get-next-todo-number",
-  "Get only the task number of the next incomplete todo",
+  "get-next-todo-id",
+  "Get the ID and task number of the next incomplete todo",
   {},
   async () => {
     const result = await safeExecute(() => {
-      const nextTodoNumber = todoService.getNextTodoNumber();
+      const nextTodo = todoService.getNextTodoId();
       
-      if (nextTodoNumber === null) {
+      if (nextTodo === null) {
         return "All todos have been completed";
       }
 
-      return nextTodoNumber.toString();
-    }, "Failed to get next todo number");
+      return `ID: ${nextTodo.id}, Task Number: ${nextTodo.taskNumber}`;
+    }, "Failed to get next todo ID");
 
     if (result instanceof Error) {
       return createErrorResponse(result.message);
@@ -264,15 +265,17 @@ server.tool(
   "Create todos by reading file contents from a folder (recursively scans all files)",
   {
     folderPath: z.string().min(1, "Folder path is required"),
+    clearAll: z.boolean().optional().default(false),
   },
-  async ({ folderPath }) => {
+  async ({ folderPath, clearAll }) => {
     const result = await safeExecute(async () => {
-      const validatedData = BulkAddTodosSchema.parse({ folderPath });
+      const validatedData = BulkAddTodosSchema.parse({ folderPath, clearAll });
       const createdTodos = await todoService.bulkAddTodos(validatedData);
       
+      const clearMessage = clearAll ? " (after clearing all existing todos)" : "";
       return {
         todoCount: createdTodos.length,
-        summary: `Created ${createdTodos.length} todos from files in ${folderPath}`
+        summary: `Created ${createdTodos.length} todos from files in ${folderPath}${clearMessage}`
       };
     }, "Failed to bulk add todos");
 

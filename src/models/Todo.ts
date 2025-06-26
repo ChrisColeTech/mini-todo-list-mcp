@@ -31,6 +31,7 @@ export interface Todo {
 export const CreateTodoSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
+  filePath: z.string().min(1, "File path is required").optional(),
 });
 
 export const GetTodoSchema = z.object({
@@ -54,6 +55,7 @@ export const DeleteTodoSchema = z.object({
 // Bulk Operations
 export const BulkAddTodosSchema = z.object({
   folderPath: z.string().min(1, "Folder path is required"),
+  clearAll: z.boolean().optional().default(false),
 });
 
 /**

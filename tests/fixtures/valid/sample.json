@@ -1,0 +1,14 @@
+{
+  "name": "mini-todo-list-mcp",
+  "version": "1.0.0",
+  "description": "Sample JSON configuration for testing",
+  "settings": {
+    "debug": true,
+    "maxTodos": 1000,
+    "features": ["create", "read", "update", "delete"]
+  },
+  "database": {
+    "type": "sqlite",
+    "path": "./todos.db"
+  }
+}
