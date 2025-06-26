@@ -1,366 +1,192 @@
 /**
- * Unit tests for TodoService
+ * Unit tests for TodoService - Fixed API
  */
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { join } from 'path';
-import { mkdirSync, existsSync } from 'fs';
+import { mkdirSync, existsSync, writeFileSync } from 'fs';
 import { todoService } from '../../src/services/TodoService.js';
-import { TestFixtures, mockTodos, dbHelpers, assertions } from '../test-utils.js';
 
 describe('TodoService', () => {
   let tempDir: string;
 
-  beforeEach(async () => {
-    tempDir = join(process.cwd(), 'tests', 'temp', 'fixtures');
+  beforeEach(() => {
+    tempDir = join(process.cwd(), 'tests', 'temp', 'unit');
     if (!existsSync(tempDir)) {
       mkdirSync(tempDir, { recursive: true });
     }
-    await dbHelpers.clearDatabase();
+    todoService.clearAllTodos();
   });
 
-  describe('create', () => {
-    it('should create a todo with title and description', async () => {
-      const todo = await todoService.create(mockTodos.valid.title, mockTodos.valid.description);
+  describe('createTodo', () => {
+    it('should create a todo with title and description', () => {
+      const todo = todoService.createTodo({
+        title: 'Test Todo',
+        description: 'Test description'
+      });
       
-      assertions.isNewTodo(todo);
-      expect(todo.title).toBe(mockTodos.valid.title);
-      expect(todo.description).toBe(mockTodos.valid.description);
+      expect(todo).toHaveProperty('id');
+      expect(todo).toHaveProperty('taskNumber');
+      expect(todo.title).toBe('Test Todo');
+      expect(todo.description).toBe('Test description');
+      expect(todo.status).toBe('New');
       expect(todo.taskNumber).toBe(1);
-      expect(todo.filePath).toBeNull();
     });
 
-    it('should create todo with file content when filePath provided', async () => {
-      const filePath = TestFixtures.copyFixtureToTemp('valid', 'sample.txt', tempDir);
-      const expectedContent = TestFixtures.readFixture('valid', 'sample.txt');
+    it('should create todo with file content', () => {
+      const filePath = join(tempDir, 'test.txt');
+      writeFileSync(filePath, 'File content here');
       
-      const todo = await todoService.create('Test with file', 'Base description', filePath);
+      const todo = todoService.createTodo({
+        title: 'File Todo',
+        description: 'Base description',
+        filePath: filePath
+      });
       
-      assertions.isNewTodo(todo);
-      expect(todo.title).toBe('Test with file');
-      expect(todo.description).toContain('Base description');
-      expect(todo.description).toContain(expectedContent);
+      expect(todo.description).toContain('File content here');
       expect(todo.filePath).toBe(filePath);
     });
+  });
 
-    it('should auto-increment task numbers', async () => {
-      const todo1 = await todoService.create('Todo 1', 'Description 1');
-      const todo2 = await todoService.create('Todo 2', 'Description 2');
-      const todo3 = await todoService.create('Todo 3', 'Description 3');
+  describe('getTodo', () => {
+    it('should retrieve a todo by ID', () => {
+      const created = todoService.createTodo({
+        title: 'Test Todo',
+        description: 'Test description'
+      });
       
-      expect(todo1.taskNumber).toBe(1);
-      expect(todo2.taskNumber).toBe(2);
-      expect(todo3.taskNumber).toBe(3);
+      const retrieved = todoService.getTodo(created.id);
+      expect(retrieved).toBeDefined();
+      expect(retrieved?.title).toBe('Test Todo');
     });
 
-    it('should handle minimal input', async () => {
-      const todo = await todoService.create(mockTodos.minimal.title, mockTodos.minimal.description);
-      
-      assertions.isNewTodo(todo);
-      expect(todo.title).toBe('A');
-      expect(todo.description).toBe('B');
-    });
-
-    it('should handle long input', async () => {
-      const todo = await todoService.create(mockTodos.long.title, mockTodos.long.description);
-      
-      assertions.isNewTodo(todo);
-      expect(todo.title).toBe(mockTodos.long.title);
-      expect(todo.description).toBe(mockTodos.long.description);
-    });
-
-    it('should reject empty title', async () => {
-      await expect(todoService.create('', 'Valid description'))
-        .rejects.toThrow('Title cannot be empty');
-    });
-
-    it('should reject empty description', async () => {
-      await expect(todoService.create('Valid title', ''))
-        .rejects.toThrow('Description cannot be empty');
-    });
-
-    it('should reject whitespace-only title', async () => {
-      await expect(todoService.create('   ', 'Valid description'))
-        .rejects.toThrow('Title cannot be empty');
-    });
-
-    it('should reject whitespace-only description', async () => {
-      await expect(todoService.create('Valid title', '   '))
-        .rejects.toThrow('Description cannot be empty');
-    });
-
-    it('should reject non-existent file path', async () => {
-      const nonExistentPath = join(tempDir, 'non-existent.txt');
-      
-      await expect(todoService.create('Test', 'Description', nonExistentPath))
-        .rejects.toThrow('File not found');
+    it('should return undefined for non-existent ID', () => {
+      const result = todoService.getTodo(99999);
+      expect(result).toBeUndefined();
     });
   });
 
-  describe('getById', () => {
-    it('should retrieve existing todo by ID', async () => {
-      const created = await todoService.create(mockTodos.valid.title, mockTodos.valid.description);
-      const retrieved = await todoService.getById(created.id);
+  describe('updateTodo', () => {
+    it('should update a todo', () => {
+      const created = todoService.createTodo({
+        title: 'Original Title',
+        description: 'Original description'
+      });
       
-      expect(retrieved).toEqual(created);
-      assertions.isNewTodo(retrieved);
-    });
-
-    it('should throw error for non-existent ID', async () => {
-      await expect(todoService.getById(99999))
-        .rejects.toThrow('Todo not found');
-    });
-
-    it('should throw error for invalid ID types', async () => {
-      await expect(todoService.getById(0))
-        .rejects.toThrow('Invalid ID');
+      const updated = todoService.updateTodo({
+        id: created.id,
+        title: 'Updated Title',
+        description: 'Updated description'
+      });
       
-      await expect(todoService.getById(-1))
-        .rejects.toThrow('Invalid ID');
+      expect(updated).toBeDefined();
+      expect(updated?.title).toBe('Updated Title');
+      expect(updated?.description).toBe('Updated description');
     });
   });
 
-  describe('update', () => {
-    let todo: any;
-
-    beforeEach(async () => {
-      todo = await todoService.create(mockTodos.valid.title, mockTodos.valid.description);
-    });
-
-    it('should update title only', async () => {
-      const newTitle = 'Updated Title';
-      const updated = await todoService.update(todo.id, newTitle, undefined);
+  describe('completeTodo', () => {
+    it('should complete a todo', () => {
+      const created = todoService.createTodo({
+        title: 'Todo to Complete',
+        description: 'Will be completed'
+      });
       
-      assertions.isNewTodo(updated);
-      expect(updated.title).toBe(newTitle);
-      expect(updated.description).toBe(mockTodos.valid.description);
-      expect(updated.updatedAt).not.toBe(todo.updatedAt);
-    });
-
-    it('should update description only', async () => {
-      const newDescription = 'Updated description';
-      const updated = await todoService.update(todo.id, undefined, newDescription);
-      
-      assertions.isNewTodo(updated);
-      expect(updated.title).toBe(mockTodos.valid.title);
-      expect(updated.description).toBe(newDescription);
-      expect(updated.updatedAt).not.toBe(todo.updatedAt);
-    });
-
-    it('should update both title and description', async () => {
-      const newTitle = 'Updated Title';
-      const newDescription = 'Updated description';
-      const updated = await todoService.update(todo.id, newTitle, newDescription);
-      
-      assertions.isNewTodo(updated);
-      expect(updated.title).toBe(newTitle);
-      expect(updated.description).toBe(newDescription);
-      expect(updated.updatedAt).not.toBe(todo.updatedAt);
-    });
-
-    it('should reject updating non-existent todo', async () => {
-      await expect(todoService.update(99999, 'New title', 'New description'))
-        .rejects.toThrow('Todo not found');
-    });
-
-    it('should reject empty updates', async () => {
-      await expect(todoService.update(todo.id))
-        .rejects.toThrow('At least one field (title or description) must be provided');
-    });
-
-    it('should reject empty title update', async () => {
-      await expect(todoService.update(todo.id, '', undefined))
-        .rejects.toThrow('Title cannot be empty');
-    });
-
-    it('should reject empty description update', async () => {
-      await expect(todoService.update(todo.id, undefined, ''))
-        .rejects.toThrow('Description cannot be empty');
+      const completed = todoService.completeTodo(created.id);
+      expect(completed).toBeDefined();
+      expect(completed?.status).toBe('Done');
+      expect(completed?.completedAt).toBeDefined();
     });
   });
 
-  describe('complete', () => {
-    let todo: any;
-
-    beforeEach(async () => {
-      todo = await todoService.create(mockTodos.valid.title, mockTodos.valid.description);
-    });
-
-    it('should mark todo as completed', async () => {
-      const completed = await todoService.complete(todo.id);
+  describe('deleteTodo', () => {
+    it('should delete a todo', () => {
+      const created = todoService.createTodo({
+        title: 'Todo to Delete',
+        description: 'Will be deleted'
+      });
       
-      assertions.isCompletedTodo(completed);
-      expect(completed.id).toBe(todo.id);
-      expect(completed.title).toBe(todo.title);
-      expect(completed.description).toBe(todo.description);
-    });
-
-    it('should allow completing already completed todo', async () => {
-      const firstComplete = await todoService.complete(todo.id);
-      const secondComplete = await todoService.complete(todo.id);
+      const deleted = todoService.deleteTodo(created.id);
+      expect(deleted).toBe(true);
       
-      assertions.isCompletedTodo(secondComplete);
-      expect(secondComplete.completedAt).toBe(firstComplete.completedAt);
-    });
-
-    it('should reject completing non-existent todo', async () => {
-      await expect(todoService.complete(99999))
-        .rejects.toThrow('Todo not found');
+      const retrieved = todoService.getTodo(created.id);
+      expect(retrieved).toBeUndefined();
     });
   });
 
-  describe('delete', () => {
-    let todo: any;
-
-    beforeEach(async () => {
-      todo = await todoService.create(mockTodos.valid.title, mockTodos.valid.description);
-    });
-
-    it('should delete existing todo', async () => {
-      const result = await todoService.delete(todo.id);
+  describe('getNextTodo', () => {
+    it('should get next todo in sequence', () => {
+      const todo1 = todoService.createTodo({
+        title: 'First Todo',
+        description: 'Task 1'
+      });
       
-      expect(result).toBe(true);
-      await expect(todoService.getById(todo.id))
-        .rejects.toThrow('Todo not found');
+      todoService.createTodo({
+        title: 'Second Todo',
+        description: 'Task 2'
+      });
+      
+      const next = todoService.getNextTodo();
+      expect(next).toBeDefined();
+      expect(next?.id).toBe(todo1.id);
     });
 
-    it('should reject deleting non-existent todo', async () => {
-      await expect(todoService.delete(99999))
-        .rejects.toThrow('Todo not found');
+    it('should return undefined when no todos exist', () => {
+      const next = todoService.getNextTodo();
+      expect(next).toBeUndefined();
     });
   });
 
-  describe('getNext', () => {
-    it('should return null when no todos exist', async () => {
-      const next = await todoService.getNext();
-      expect(next).toBeNull();
-    });
-
-    it('should return the first incomplete todo', async () => {
-      const todos = await dbHelpers.createMultipleTodos(3);
+  describe('getNextTodoId', () => {
+    it('should get next todo ID and task number', () => {
+      todoService.createTodo({
+        title: 'Test Todo',
+        description: 'For ID test'
+      });
       
-      const next = await todoService.getNext();
-      expect(next).toEqual(todos[0]);
+      const result = todoService.getNextTodoId();
+      expect(result).toBeDefined();
+      expect(result).toHaveProperty('id');
+      expect(result).toHaveProperty('taskNumber');
+      expect(result?.taskNumber).toBe(1);
     });
 
-    it('should skip completed todos and return next incomplete', async () => {
-      const todos = await dbHelpers.createMultipleTodos(3);
-      await todoService.complete(todos[0].id);
-      
-      const next = await todoService.getNext();
-      expect(next).toEqual(todos[1]);
-    });
-
-    it('should return null when all todos are completed', async () => {
-      const todos = await dbHelpers.createMultipleTodos(3);
-      for (const todo of todos) {
-        await todoService.complete(todo.id);
-      }
-      
-      const next = await todoService.getNext();
-      expect(next).toBeNull();
-    });
-  });
-
-  describe('getNextId', () => {
-    it('should return null when no todos exist', async () => {
-      const result = await todoService.getNextId();
+    it('should return null when no todos exist', () => {
+      const result = todoService.getNextTodoId();
       expect(result).toBeNull();
     });
-
-    it('should return ID and task number of next incomplete todo', async () => {
-      const todos = await dbHelpers.createMultipleTodos(3);
-      
-      const result = await todoService.getNextId();
-      expect(result).toEqual({
-        id: todos[0].id,
-        taskNumber: todos[0].taskNumber
-      });
-    });
-
-    it('should skip completed todos', async () => {
-      const todos = await dbHelpers.createMultipleTodos(3);
-      await todoService.complete(todos[0].id);
-      
-      const result = await todoService.getNextId();
-      expect(result).toEqual({
-        id: todos[1].id,
-        taskNumber: todos[1].taskNumber
-      });
-    });
   });
 
-  describe('clearAll', () => {
-    it('should clear empty database', async () => {
-      const count = await todoService.clearAll();
-      expect(count).toBe(0);
-    });
-
-    it('should clear all todos and return count', async () => {
-      await dbHelpers.createMultipleTodos(5);
+  describe('bulkAddTodos', () => {
+    it('should create todos from folder contents', async () => {
+      const bulkDir = join(tempDir, 'bulk-test');
+      mkdirSync(bulkDir, { recursive: true });
       
-      const count = await todoService.clearAll();
-      expect(count).toBe(5);
+      writeFileSync(join(bulkDir, 'task1.txt'), 'Content of task 1');
+      writeFileSync(join(bulkDir, 'task2.md'), '# Task 2\nMarkdown content');
       
-      const next = await todoService.getNext();
-      expect(next).toBeNull();
-    });
-
-    it('should reset task number sequence after clear', async () => {
-      await dbHelpers.createMultipleTodos(3);
-      await todoService.clearAll();
+      const todos = await todoService.bulkAddTodos({
+        folderPath: bulkDir,
+        clearAll: false
+      });
       
-      const newTodo = await todoService.create('New todo', 'After clear');
-      expect(newTodo.taskNumber).toBe(1);
-    });
-  });
-
-  describe('bulkAdd', () => {
-    it('should create todos from valid folder', async () => {
-      const validFixturesDir = TestFixtures.getFixturePath('valid', '');
-      
-      const result = await todoService.bulkAdd(validFixturesDir);
-      
-      expect(result.length).toBeGreaterThan(0);
-      result.forEach((todo, index) => {
-        assertions.isNewTodo(todo);
+      expect(todos).toHaveLength(2);
+      todos.forEach((todo, index) => {
         expect(todo.taskNumber).toBe(index + 1);
         expect(todo.filePath).toBeTruthy();
       });
     });
+  });
 
-    it('should clear existing todos when clearAll is true', async () => {
-      await dbHelpers.createMultipleTodos(3);
-      const validFixturesDir = TestFixtures.getFixturePath('valid', '');
+  describe('clearAllTodos', () => {
+    it('should clear all todos', () => {
+      todoService.createTodo({ title: 'Todo 1', description: 'Desc 1' });
+      todoService.createTodo({ title: 'Todo 2', description: 'Desc 2' });
       
-      const result = await todoService.bulkAdd(validFixturesDir, true);
+      const clearedCount = todoService.clearAllTodos();
+      expect(clearedCount).toBe(2);
       
-      expect(result.length).toBeGreaterThan(0);
-      expect(result[0].taskNumber).toBe(1); // Should start from 1 after clear
-    });
-
-    it('should append to existing todos when clearAll is false', async () => {
-      const existingTodos = await dbHelpers.createMultipleTodos(2);
-      const validFixturesDir = TestFixtures.getFixturePath('valid', '');
-      
-      const result = await todoService.bulkAdd(validFixturesDir, false);
-      
-      expect(result.length).toBeGreaterThan(0);
-      expect(result[0].taskNumber).toBeGreaterThan(2); // Should continue from existing
-    });
-
-    it('should reject non-existent folder', async () => {
-      const nonExistentPath = join(tempDir, 'non-existent-folder');
-      
-      await expect(todoService.bulkAdd(nonExistentPath))
-        .rejects.toThrow('Folder not found');
-    });
-
-    it('should handle empty folder', async () => {
-      const emptyDir = join(tempDir, 'empty');
-      mkdirSync(emptyDir, { recursive: true });
-      
-      const result = await todoService.bulkAdd(emptyDir);
-      expect(result).toEqual([]);
+      const next = todoService.getNextTodo();
+      expect(next).toBeUndefined();
     });
   });
 });

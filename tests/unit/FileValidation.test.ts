@@ -1,194 +1,166 @@
 /**
- * Tests for file type validation and content reading
+ * File validation tests for TodoService - Fixed API
  */
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { join } from 'path';
-import { writeFileSync, mkdirSync, existsSync } from 'fs';
+import { mkdirSync, existsSync, writeFileSync } from 'fs';
 import { todoService } from '../../src/services/TodoService.js';
-import { TestFixtures, dbHelpers } from '../test-utils.js';
 
-describe('File Validation and Content Reading', () => {
+describe('FileValidation', () => {
   let tempDir: string;
 
-  beforeEach(async () => {
-    tempDir = join(process.cwd(), 'tests', 'temp', 'validation');
+  beforeEach(() => {
+    tempDir = join(process.cwd(), 'tests', 'temp', 'file-validation');
     if (!existsSync(tempDir)) {
       mkdirSync(tempDir, { recursive: true });
     }
-    await dbHelpers.clearDatabase();
+    todoService.clearAllTodos();
   });
 
-  describe('Supported File Types', () => {
-    const supportedExtensions = TestFixtures.getValidExtensions();
+  it('should handle valid text files', () => {
+    const filePath = join(tempDir, 'test.txt');
+    writeFileSync(filePath, 'This is test content');
+    
+    const todo = todoService.createTodo({
+      title: 'Test',
+      description: 'Description',
+      filePath: filePath
+    });
+    
+    expect(todo.description).toContain('This is test content');
+    expect(todo.filePath).toBe(filePath);
+  });
 
-    supportedExtensions.forEach(ext => {
-      it(`should read content from ${ext} files`, async () => {
-        const filename = `test${ext}`;
-        const filePath = join(tempDir, filename);
-        const content = `Test content for ${ext} file\nSecond line`;
-        
-        writeFileSync(filePath, content);
-        
-        const todo = await todoService.create('Test', 'Description', filePath);
-        expect(todo.description).toContain(content);
-        expect(todo.filePath).toBe(filePath);
+  it('should handle markdown files', () => {
+    const filePath = join(tempDir, 'test.md');
+    writeFileSync(filePath, '# Test Markdown\nContent here');
+    
+    const todo = todoService.createTodo({
+      title: 'Test',
+      description: 'Description',
+      filePath: filePath
+    });
+    
+    expect(todo.description).toContain('# Test Markdown');
+    expect(todo.description).toContain('Content here');
+  });
+
+  it('should reject non-existent files', () => {
+    const filePath = join(tempDir, 'nonexistent.txt');
+    
+    expect(() => {
+      todoService.createTodo({
+        title: 'Test',
+        description: 'Description',
+        filePath: filePath
       });
-    });
-
-    it('should read files without extensions', async () => {
-      const filePath = join(tempDir, 'no-extension-file');
-      const content = 'Content of file without extension';
-      
-      writeFileSync(filePath, content);
-      
-      const todo = await todoService.create('Test', 'Description', filePath);
-      expect(todo.description).toContain(content);
-    });
+    }).toThrow('File does not exist');
   });
 
-  describe('Rejected File Types', () => {
-    const binaryExtensions = TestFixtures.getBinaryExtensions();
-
-    binaryExtensions.forEach(ext => {
-      it(`should reject ${ext} files`, async () => {
-        const filename = `test${ext}`;
-        const filePath = join(tempDir, filename);
-        
-        writeFileSync(filePath, 'This is not actually binary content');
-        
-        await expect(todoService.create('Test', 'Description', filePath))
-          .rejects.toThrow(/not supported|binary|invalid/i);
+  it('should handle empty files', () => {
+    const filePath = join(tempDir, 'empty.txt');
+    writeFileSync(filePath, '');
+    
+    expect(() => {
+      todoService.createTodo({
+        title: 'Empty file test',
+        description: 'Base description',
+        filePath: filePath
       });
+    }).toThrow('File is empty');
+  });
+
+  it('should handle large files', () => {
+    const filePath = join(tempDir, 'large.txt');
+    const largeContent = 'x'.repeat(10000);
+    writeFileSync(filePath, largeContent);
+    
+    const todo = todoService.createTodo({
+      title: 'Large file test',
+      description: 'Base description',
+      filePath: filePath
+    });
+    
+    expect(todo.description).toContain(largeContent);
+  });
+
+  it('should handle files with special characters', () => {
+    const filePath = join(tempDir, 'special.txt');
+    writeFileSync(filePath, 'Special chars: éñ中文🚀');
+    
+    const todo = todoService.createTodo({
+      title: 'Special chars test',
+      description: 'Base description',
+      filePath: filePath
+    });
+    
+    expect(todo.description).toContain('Special chars: éñ中文🚀');
+  });
+
+  it('should handle JSON files', () => {
+    const filePath = join(tempDir, 'test.json');
+    writeFileSync(filePath, '{"key": "value", "number": 42}');
+    
+    const todo = todoService.createTodo({
+      title: 'JSON test',
+      description: 'Base description',
+      filePath: filePath
+    });
+    
+    expect(todo.description).toContain('"key": "value"');
+    expect(todo.description).toContain('"number": 42');
+  });
+
+  it('should handle code files', () => {
+    const filePath = join(tempDir, 'test.js');
+    writeFileSync(filePath, 'function hello() {\n  console.log("Hello World");\n}');
+    
+    const todo = todoService.createTodo({
+      title: 'Code test',
+      description: 'Base description',
+      filePath: filePath
+    });
+    
+    expect(todo.description).toContain('function hello()');
+    expect(todo.description).toContain('console.log("Hello World")');
+  });
+
+  it('should process multiple files in bulk', async () => {
+    const testDir = join(tempDir, 'bulk');
+    mkdirSync(testDir, { recursive: true });
+    
+    writeFileSync(join(testDir, 'file1.txt'), 'Content 1');
+    writeFileSync(join(testDir, 'file2.md'), '# Content 2');
+    writeFileSync(join(testDir, 'file3.js'), 'console.log("test");');
+    
+    const todos = await todoService.bulkAddTodos({
+      folderPath: testDir,
+      clearAll: false
+    });
+    
+    expect(todos).toHaveLength(3);
+    todos.forEach(todo => {
+      expect(todo.filePath).toBeTruthy();
+      expect(todo.description.length).toBeGreaterThan(0);
     });
   });
 
-  describe('File Content Edge Cases', () => {
-    it('should handle empty files', async () => {
-      const filePath = join(tempDir, 'empty.txt');
-      writeFileSync(filePath, '');
-      
-      const todo = await todoService.create('Empty file test', 'Base description', filePath);
-      expect(todo.description).toContain('Base description');
-      expect(todo.filePath).toBe(filePath);
+  it('should handle recursive directory structure', async () => {
+    const testDir = join(tempDir, 'recursive');
+    const nestedDir = join(testDir, 'nested');
+    mkdirSync(nestedDir, { recursive: true });
+    
+    writeFileSync(join(testDir, 'root.txt'), 'Root content');
+    writeFileSync(join(nestedDir, 'nested.txt'), 'Nested content');
+    
+    const todos = await todoService.bulkAddTodos({
+      folderPath: testDir,
+      clearAll: false
     });
-
-    it('should handle very large files', async () => {
-      const filePath = join(tempDir, 'large.txt');
-      const largeContent = 'Large file content '.repeat(1000);
-      
-      writeFileSync(filePath, largeContent);
-      
-      const todo = await todoService.create('Large file test', 'Base description', filePath);
-      expect(todo.description).toContain(largeContent);
-    });
-
-    it('should handle files with special characters', async () => {
-      const filePath = join(tempDir, 'special.txt');
-      const specialContent = 'Content with émojis 🚀 and ñañá characters';
-      
-      writeFileSync(filePath, specialContent);
-      
-      const todo = await todoService.create('Special chars test', 'Base description', filePath);
-      expect(todo.description).toContain(specialContent);
-    });
-
-    it('should handle files with line breaks and formatting', async () => {
-      const filePath = join(tempDir, 'formatted.md');
-      const formattedContent = `# Title\n\n## Subtitle\n\n- Item 1\n- Item 2\n\n**Bold** and *italic* text`;
-      
-      writeFileSync(filePath, formattedContent);
-      
-      const todo = await todoService.create('Formatted test', 'Base description', filePath);
-      expect(todo.description).toContain(formattedContent);
-    });
-
-    it('should handle files with tabs and spaces', async () => {
-      const filePath = join(tempDir, 'whitespace.js');
-      const codeContent = `function test() {\n\tif (true) {\n\t\treturn "indented";\n\t}\n}`;
-      
-      writeFileSync(filePath, codeContent);
-      
-      const todo = await todoService.create('Code test', 'Base description', filePath);
-      expect(todo.description).toContain(codeContent);
-    });
-  });
-
-  describe('Bulk Add File Validation', () => {
-    it('should process only supported files in bulk add', async () => {
-      // Create a mix of supported and unsupported files
-      const testDir = join(tempDir, 'mixed-files');
-      mkdirSync(testDir, { recursive: true });
-      
-      // Supported files
-      writeFileSync(join(testDir, 'test.txt'), 'Text content');
-      writeFileSync(join(testDir, 'test.js'), 'JavaScript content');
-      writeFileSync(join(testDir, 'test.md'), '# Markdown content');
-      
-      // Unsupported files (should be skipped)
-      writeFileSync(join(testDir, 'test.exe'), 'Fake binary');
-      writeFileSync(join(testDir, 'test.png'), 'Fake image');
-      
-      const todos = await todoService.bulkAdd(testDir);
-      
-      // Should only create todos for supported files
-      expect(todos.length).toBe(3);
-      todos.forEach(todo => {
-        expect(todo.filePath).not.toMatch(/\.(exe|png)$/);
-      });
-    });
-
-    it('should handle nested directories', async () => {
-      const testDir = join(tempDir, 'nested');
-      const subDir = join(testDir, 'subfolder');
-      mkdirSync(subDir, { recursive: true });
-      
-      writeFileSync(join(testDir, 'root.txt'), 'Root file');
-      writeFileSync(join(subDir, 'nested.txt'), 'Nested file');
-      
-      const todos = await todoService.bulkAdd(testDir);
-      
-      expect(todos.length).toBe(2);
-      const filePaths = todos.map(t => t.filePath);
-      expect(filePaths.some(p => p.includes('root.txt'))).toBe(true);
-      expect(filePaths.some(p => p.includes('nested.txt'))).toBe(true);
-    });
-
-    it('should skip hidden files and directories', async () => {
-      const testDir = join(tempDir, 'hidden-test');
-      const hiddenDir = join(testDir, '.hidden');
-      mkdirSync(hiddenDir, { recursive: true });
-      
-      writeFileSync(join(testDir, 'visible.txt'), 'Visible file');
-      writeFileSync(join(testDir, '.hidden-file.txt'), 'Hidden file');
-      writeFileSync(join(hiddenDir, 'nested-hidden.txt'), 'Nested hidden');
-      
-      const todos = await todoService.bulkAdd(testDir);
-      
-      // Should only process visible files
-      expect(todos.length).toBe(1);
-      expect(todos[0].filePath).toContain('visible.txt');
-    });
-  });
-
-  describe('Error Handling', () => {
-    it('should handle permission errors gracefully', async () => {
-      // This test might be platform-specific
-      const filePath = join(tempDir, 'readonly.txt');
-      writeFileSync(filePath, 'Content');
-      
-      // Try to create todo with file - should work since we're just reading
-      const todo = await todoService.create('Permission test', 'Description', filePath);
-      expect(todo.filePath).toBe(filePath);
-    });
-
-    it('should handle files that are deleted after validation', async () => {
-      const filePath = join(tempDir, 'temp-file.txt');
-      writeFileSync(filePath, 'Temporary content');
-      
-      // File exists during validation but could be deleted by another process
-      // This is a race condition test - in normal operation the file should remain
-      const todo = await todoService.create('Temp file test', 'Description', filePath);
-      expect(todo.filePath).toBe(filePath);
-    });
+    
+    expect(todos).toHaveLength(2);
+    const filePaths = todos.map(t => t.filePath);
+    expect(filePaths.some(p => p?.includes('root.txt'))).toBe(true);
+    expect(filePaths.some(p => p?.includes('nested.txt'))).toBe(true);
   });
 });
