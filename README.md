@@ -56,35 +56,32 @@ npm install -g mini-todo-list-mcp
 }
 ```
 
-## ✨ Core Commands
+## Core Tools
 
-### 📋 Task Creation
+### 📝 Task Creation
+| Tool | Purpose | How to Use |
+|------|---------|------------|
+| `create-todo` | Create single task | "Create a todo to fix login bug with OAuth integration details" |
+| `bulk-add-todos` | Create tasks from folder | "Use bulk-add-todos to create tasks from all files in /my/project/src" |
 
-| Command          | Parameters                                                                                                                                                                                                       | What It Does                                                                                                    |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `create-todo`    | **title**: A short name for your task<br>**description**: What needs to be done<br>**filePath**: Path to a file to include its content (optional)                                                                | Creates one new task with a description of what needs to be done                                                |
-| `bulk-add-todos` | **folderPath**: The complete path to the folder containing files you want converted into todos<br>**clearAll**: Set to `true` to delete existing tasks first, `false` to keep them (optional, defaults to false) | Scans the folder, reads every file, and creates numbered tasks with all the file content embedded automatically |
-
-### 🔍 Task Retrieval
-
-| Command         | Parameters                                                               | What It Does                                                                                                                 |
-| --------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| `get-next-todo` | No parameters needed                                                     | Gives you the next task that needs to be completed, with the full file content and clear instructions on how to mark it done |
-| `get-todo`      | **id**: The unique identifier for the specific task you want to retrieve | Shows you the complete details of that one task, including any file content                                                  |
+### 🔍 Task Retrieval  
+| Tool | Purpose | How to Use |
+|------|---------|------------|
+| `get-next-todo` | Get next task to work on | "Get my next task" or "What should I work on next?" |
+| `get-todo` | Get specific task details | "Show me the details of todo 5" |
+| `get-next-todo-id` | Get next task ID only | "What's the ID of my next task?" |
 
 ### ✏️ Task Management
+| Tool | Purpose | How to Use |
+|------|---------|------------|
+| `update-todo` | Modify existing task | "Update todo 3 to add security requirements" |
+| `complete-todo` | Mark task as done | "Mark todo 5 as completed" or "Complete task 5" |
+| `delete-todo` | Remove task permanently | "Delete todo 7" |
 
-| Command         | Parameters                                                                                                                                                                  | What It Does                                                                                     |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `update-todo`   | **id**: The unique identifier for the task to modify<br>**title**: New name for the task (optional)<br>**description**: New description of what needs to be done (optional) | Changes the information in an existing task (you must provide either a new title or description) |
-| `complete-todo` | **id**: The unique identifier for the specific task                                                                                                                         | Marks that specific task as finished and removes it from your workflow queue                     |
-| `delete-todo`   | **id**: The unique identifier for the task to remove permanently                                                                                                            | Completely removes that task from your list - this cannot be undone                              |
-
-### 🔄 Bulk Operations
-
-| Command           | Parameters           | What It Does                                                                  |
-| ----------------- | -------------------- | ----------------------------------------------------------------------------- |
-| `clear-all-todos` | No parameters needed | Deletes every single task from your list - use this to start completely fresh |
+### 🗂️ Bulk Operations
+| Tool | Purpose | How to Use |
+|------|---------|------------|
+| `clear-all-todos` | Start fresh | "Clear all todos and start over" |
 
 ## 🎯 Real Orchestrator + Agent Workflow (Roo Code/Cline)
 
