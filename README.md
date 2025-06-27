@@ -281,31 +281,6 @@ You: "Continue this pattern - use get-next-todo, convert to TypeScript with prop
 
 **Result:** Both smaller and larger AI models work more efficiently, make fewer mistakes, and maintain focus on actual tasks instead of housekeeping.
 
-## 🎯 Why This Works for All AI Models
-
-**Designed for smaller models (7B, 8B, 3B Instruct) that struggle with:**
-
-- Reading folders and listing files
-- Keeping task lists in memory
-- Tracking progress as tasks are completed
-- Complex tool calling for file operations
-
-**But also dramatically improves larger models by:**
-
-- Eliminating manual file copy/paste workflows
-- Providing systematic task progression
-- Maintaining perfect context across long sessions
-- Reducing token usage and cognitive overhead
-
-**The MCP Solution:**
-
-- ✅ **Automatic file operations** - Server reads folders, parses files, creates tasks
-- ✅ **Persistent workflow memory** - Server tracks all progress, never loses state
-- ✅ **Simple tool interface** - AI just calls tools, server does all the work
-- ✅ **Embedded context** - Full file content delivered in each response
-
-**Result:** Both smaller and larger AI models work more efficiently, make fewer mistakes, and maintain focus on actual tasks instead of housekeeping.
-
 ## 🔧 File Processing Power
 
 Automatically processes **60+ file types** including:
