@@ -59,3 +59,21 @@ export function createErrorResponse(message: string) {
     isError: true,
   };
 }
+
+/**
+ * Create enhanced error response with usage examples
+ */
+export function createErrorResponseWithUsage(toolName: string, error: string, usage: string) {
+  return {
+    content: [
+      {
+        type: "text" as const,
+        text: `❌ ${toolName} Error: ${error}
+
+💡 Usage Example:
+${usage}`,
+      },
+    ],
+    isError: true,
+  };
+}

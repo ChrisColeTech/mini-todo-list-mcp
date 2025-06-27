@@ -27,7 +27,7 @@ import { todoService } from "./services/TodoService.js";
 import { databaseService } from "./services/DatabaseService.js";
 
 // Import utilities
-import { createSuccessResponse, createErrorResponse, formatTodo } from "./utils/formatters.js";
+import { createSuccessResponse, createErrorResponse, createErrorResponseWithUsage, formatTodo } from "./utils/formatters.js";
 import { config } from "./config.js";
 
 /**
@@ -73,7 +73,11 @@ server.tool(
     }, "Failed to create todo");
 
     if (result instanceof Error) {
-      return createErrorResponse(result.message);
+      return createErrorResponseWithUsage(
+        "create-todo",
+        result.message,
+        `"Create a todo to implement user authentication with JWT tokens"`
+      );
     }
 
     return createSuccessResponse(`✅ Created ${result}`);
@@ -99,7 +103,11 @@ server.tool(
     }, "Failed to get todo");
 
     if (result instanceof Error) {
-      return createErrorResponse(result.message);
+      return createErrorResponseWithUsage(
+        "get-todo",
+        result.message,
+        `"Show me the details of todo 5" → get-todo with id: 5`
+      );
     }
 
     return createSuccessResponse(result);
@@ -164,7 +172,11 @@ server.tool(
     }, "Failed to complete todo");
 
     if (result instanceof Error) {
-      return createErrorResponse(result.message);
+      return createErrorResponseWithUsage(
+        "complete-todo",
+        result.message,
+        `"Mark todo 5 as completed" → complete-todo with id: 5`
+      );
     }
 
     return createSuccessResponse(`✅ ${result} completed`);
@@ -281,7 +293,11 @@ server.tool(
     }, "Failed to bulk add todos");
 
     if (result instanceof Error) {
-      return createErrorResponse(result.message);
+      return createErrorResponseWithUsage(
+        "bulk-add-todos",
+        result.message,
+        `"Use bulk-add-todos to create tasks from all files in /home/user/my-project" → bulk-add-todos with folderPath: "/home/user/my-project", clearAll: false`
+      );
     }
 
     const { todoCount, summary } = result;
