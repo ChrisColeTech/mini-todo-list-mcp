@@ -76,7 +76,12 @@ server.tool(
       return createErrorResponseWithUsage(
         "create-todo",
         result.message,
-        `"Create a todo to implement user authentication with JWT tokens"`
+        `Parameters required:
+- title (string): Brief task name
+- description (string): Detailed task description  
+- filePath (string, optional): Path to file to include content from
+
+Example: create-todo with title: "Implement auth", description: "Add JWT authentication to login endpoint"`
       );
     }
 
@@ -106,7 +111,10 @@ server.tool(
       return createErrorResponseWithUsage(
         "get-todo",
         result.message,
-        `"Show me the details of todo 5" → get-todo with id: 5`
+        `Parameter required:
+- id (number): The unique todo ID to retrieve
+
+Example: get-todo with id: 5`
       );
     }
 
@@ -143,7 +151,17 @@ server.tool(
     }, "Failed to update todo");
 
     if (result instanceof Error) {
-      return createErrorResponse(result.message);
+      return createErrorResponseWithUsage(
+        "update-todo",
+        result.message,
+        `Parameters required:
+- id (number): The unique todo ID to update
+- title (string, optional): New task title
+- description (string, optional): New task description
+Note: At least one of title or description must be provided
+
+Example: update-todo with id: 3, title: "Updated task name", description: "New description"`
+      );
     }
 
     return createSuccessResponse(`✅ Updated ${result}`);
@@ -175,7 +193,10 @@ server.tool(
       return createErrorResponseWithUsage(
         "complete-todo",
         result.message,
-        `"Mark todo 5 as completed" → complete-todo with id: 5`
+        `Parameter required:
+- id (number): The unique todo ID to mark as completed
+
+Example: complete-todo with id: 5`
       );
     }
 
@@ -296,7 +317,11 @@ server.tool(
       return createErrorResponseWithUsage(
         "bulk-add-todos",
         result.message,
-        `"Use bulk-add-todos to create tasks from all files in /home/user/my-project" → bulk-add-todos with folderPath: "/home/user/my-project", clearAll: false`
+        `Parameters required:
+- folderPath (string): Absolute path to folder containing files to process
+- clearAll (boolean, optional): Whether to clear existing todos first (default: false)
+
+Example: bulk-add-todos with folderPath: "/home/user/my-project", clearAll: false`
       );
     }
 

@@ -61,17 +61,17 @@ export function createErrorResponse(message: string) {
 }
 
 /**
- * Create enhanced error response with usage examples
+ * Create enhanced error response with correct tool usage for AI agents
  */
-export function createErrorResponseWithUsage(toolName: string, error: string, usage: string) {
+export function createErrorResponseWithUsage(toolName: string, error: string, correctUsage: string) {
   return {
     content: [
       {
         type: "text" as const,
-        text: `❌ ${toolName} Error: ${error}
+        text: `Error in ${toolName}: ${error}
 
-💡 Usage Example:
-${usage}`,
+Correct usage:
+${correctUsage}`,
       },
     ],
     isError: true,
