@@ -61,27 +61,27 @@ npm install -g mini-todo-list-mcp
 ### 📝 Task Creation
 | Tool | Parameters | Purpose | How to Use |
 |------|------------|---------|------------|
-| `create-todo` | Provide a title and description for the task. Optionally include a file path to embed file content | Create single task | "Create a todo to fix login bug with OAuth integration details" |
-| `bulk-add-todos` | Specify the folder path to scan for files. Optionally clear existing todos first | Create tasks from folder | "Use bulk-add-todos to create tasks from all files in /my/project/src" |
+| `create-todo` | `title` (required): Task name<br>`description` (required): Task details<br>`filePath` (optional): File to embed | Create single task | `create-todo` with title: "Fix login bug", description: "OAuth integration details" |
+| `bulk-add-todos` | `folderPath` (required): Directory to scan<br>`clearAll` (optional): Clear existing todos first | Create tasks from folder | `bulk-add-todos` with folderPath: "/my/project/src" |
 
 ### 🔍 Task Retrieval  
 | Tool | Parameters | Purpose | How to Use |
 |------|------------|---------|------------|
-| `get-next-todo` | No parameters needed | Get next task to work on | "Get my next task" or "What should I work on next?" |
-| `get-todo` | Specify the todo ID number to retrieve | Get specific task details | "Show me the details of todo 5" |
-| `get-next-todo-id` | No parameters needed | Get next task ID only | "What's the ID of my next task?" |
+| `get-next-todo` | No parameters | Get next task to work on | `get-next-todo` |
+| `get-todo` | `id` (required): Todo ID number | Get specific task details | `get-todo` with id: 5 |
+| `get-next-todo-id` | No parameters | Get next task ID only | `get-next-todo-id` |
 
 ### ✏️ Task Management
 | Tool | Parameters | Purpose | How to Use |
 |------|------------|---------|------------|
-| `update-todo` | Specify the todo ID and provide new title or description (or both) | Modify existing task | "Update todo 3 to add security requirements" |
-| `complete-todo` | Specify the todo ID to mark as completed | Mark task as done | "Mark todo 5 as completed" or "Complete task 5" |
-| `delete-todo` | Specify the todo ID to permanently remove | Remove task permanently | "Delete todo 7" |
+| `update-todo` | `id` (required): Todo ID number<br>`title` (optional): New task name<br>`description` (optional): New task details | Modify existing task | `update-todo` with id: 3, description: "Add security requirements" |
+| `complete-todo` | `id` (required): Todo ID number | Mark task as done | `complete-todo` with id: 5 |
+| `delete-todo` | `id` (required): Todo ID number | Remove task permanently | `delete-todo` with id: 7 |
 
 ### 🗂️ Bulk Operations
 | Tool | Parameters | Purpose | How to Use |
 |------|------------|---------|------------|
-| `clear-all-todos` | No parameters needed | Start fresh | "Clear all todos and start over" |
+| `clear-all-todos` | No parameters | Start fresh | `clear-all-todos` |
 
 ## 🎯 Real Orchestrator + Agent Workflow (Roo Code/Cline)
 
