@@ -104,9 +104,11 @@ You: "Use bulk-add-todos with folderPath /home/user/tasks. Once loaded, call get
 **Step 3: Orchestrator execution:**
 
 **Orchestrator calls:** `bulk-add-todos with folderPath /home/user/tasks`
+
 **MCP server returns:** `✅ Created 10 todos from files in /home/user/tasks`
 
 **Orchestrator calls:** `get-next-todo-id`
+
 **MCP server returns:** `ID: 1, Task Number: 1`
 
 \*\*Orchestrator creates subtask using Cline/Roo Code built-in subtask system:
@@ -119,6 +121,7 @@ SUBTASK assigned to CODE mode:
 ```
 
 **CODE mode calls:** `get-todo with id 1`
+
 **MCP server returns:**
 
 ```
@@ -126,58 +129,27 @@ SUBTASK assigned to CODE mode:
 **Source File:** /home/user/tasks/task_1.md
 
 Create user authentication: Create 'app/src/auth/login.tsx' with verbatim content:
-
-import React, { useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
-
-const LoginForm: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const { login, loading } = useAuth();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await login(email, password);
-  };
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="Email"
-      />
-      <input
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        placeholder="Password"
-      />
-      <button type="submit" disabled={loading}>
-        {loading ? 'Logging in...' : 'Login'}
-      </button>
-    </form>
-  );
-};
-
-export default LoginForm;
+[Complete React component code with TypeScript interfaces, form handling, and authentication logic]
 
 **When completed, use the complete-todo MCP tool:**
 - ID: 1
 ```
 
 CODE mode creates the file exactly as specified, then calls `complete-todo with id 1`
+
 **MCP server returns:** `✅ Task 1: task_1 completed`
 
 **Orchestrator calls:** `get-next-todo-id` again
+
 **MCP server returns:** `ID: 2, Task Number: 2`
 
 **Orchestrator creates new subtask for CODE mode with id 2**
 Process repeats through all task files...
 
 **Final call:** Orchestrator calls `get-next-todo-id`
+
 **MCP server returns:** `All todos have been completed`
+
 Orchestrator stops - workflow finished.
 
 **What's happening in this workflow:**
@@ -235,43 +207,7 @@ You: "Use get-next-todo to get the first conversion task. Follow the completion 
 **Source File:** /home/user/component-tasks/task_1.md
 
 Convert Header component to TypeScript: Update 'app/src/Header.jsx' - add proper prop interfaces, type all variables, ensure type safety. Current file:
-
-import React from 'react';
-import './Header.css';
-
-const Header = ({ title, subtitle, onMenuClick, isMenuOpen, user }) => {
-  return (
-    <header className="main-header">
-      <div className="header-content">
-        <button
-          className="menu-toggle"
-          onClick={onMenuClick}
-          aria-label="Toggle menu"
-        >
-          <span className={`hamburger ${isMenuOpen ? 'open' : ''}`}></span>
-        </button>
-
-        <div className="header-titles">
-          <h1>{title}</h1>
-          {subtitle && <h2>{subtitle}</h2>}
-        </div>
-
-        <div className="user-section">
-          {user ? (
-            <div className="user-info">
-              <img src={user.avatar} alt="User avatar" />
-              <span>{user.name}</span>
-            </div>
-          ) : (
-            <button className="login-btn">Login</button>
-          )}
-        </div>
-      </div>
-    </header>
-  );
-};
-
-export default Header;
+[Complete React Header component with props, JSX structure, and styling]
 
 **When completed, use the complete-todo MCP tool:**
 - ID: 1
@@ -286,6 +222,7 @@ You: "Use get-next-todo to get the next conversion task. Follow the same TypeScr
 ```
 
 **MCP server returns:** Next task with embedded content and existing file
+
 AI converts component, calls `complete-todo with id 2`
 
 **Step 5: Repeat with consistent instructions**
