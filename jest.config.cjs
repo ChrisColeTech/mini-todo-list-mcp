@@ -23,6 +23,9 @@ module.exports = {
   ],
   verbose: true,
   testTimeout: 10000,
+  maxWorkers: 1, // Run tests serially to avoid database conflicts
+  resetMocks: true,
+  restoreMocks: true,
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },

@@ -3,8 +3,10 @@
  */
 import { existsSync, mkdirSync, rmSync } from 'fs';
 import { join } from 'path';
+import { tmpdir } from 'os';
 
-const TEST_DB_DIR = join(process.cwd(), 'tests', 'temp');
+// Create process-unique test directory to avoid conflicts
+const TEST_DB_DIR = join(tmpdir(), '.mini-todo-test-' + process.pid + '-' + Date.now());
 const TEST_DB_PATH = join(TEST_DB_DIR, 'test.db');
 
 // Set test database path

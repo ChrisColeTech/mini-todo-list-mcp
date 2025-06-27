@@ -180,6 +180,9 @@ describe('Mini Todo List MCP - Basic Integration', () => {
 
   describe('Bulk Operations', () => {
     it('should perform bulk add from folder', async () => {
+      // Clear all todos first to ensure clean state
+      todoService.clearAllTodos();
+      
       const bulkDir = join(tempDir, 'bulk-test');
       mkdirSync(bulkDir, { recursive: true });
       
