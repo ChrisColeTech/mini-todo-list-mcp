@@ -224,31 +224,19 @@ Orchestrator stops - workflow finished.
 
 ### What's happening in this workflow:
 
-**🧠 `bulk-add-todos` usage:**
-The MCP server becomes the brains - it scans the task folder, reads every task file, and creates numbered todos with complete instructions embedded. The orchestrator doesn't need to remember what work needs to be done, doesn't need to track which tasks exist, doesn't waste tokens managing task lists. One call, everything loaded.
+The workflow starts when `bulk-add-todos` transforms the MCP server into the brains of the operation. It scans the task folder, reads every task file, and creates numbered todos with complete instructions embedded. The orchestrator doesn't need to remember what work needs to be done, doesn't need to track which tasks exist, and doesn't waste tokens managing task lists. One call loads everything.
 
-**⚡ `get-next-todo-id` optimization:**
-Instead of the orchestrator getting full file content (expensive), it gets just "ID: 1, Task Number: 1" - minimal tokens for coordination. The orchestrator doesn't need to store file content in context or remember what task comes next. The MCP server is the memory.
+When the orchestrator calls `get-next-todo-id`, it receives minimal coordination data like "ID: 1, Task Number: 1" instead of expensive full file content. The orchestrator doesn't need to store file content in context or remember what task comes next - the MCP server becomes the memory.
 
-**🎯 Subtask creation benefits:**
-The orchestrator creates simple, identical subtasks - "get todo 1, do work, complete todo 1." No complex instructions to remember, no file paths to track, no context juggling. The CODE mode gets fresh, complete context via `get-todo` when needed.
+The orchestrator then creates simple, identical subtasks with the pattern "get todo 1, do work, complete todo 1." There are no complex instructions to remember, no file paths to track, and no context juggling. The CODE mode gets fresh, complete context via `get-todo` when needed.
 
-**💪 `get-todo` power:**
-CODE mode calls this and receives the complete task with full work instructions and verbatim file content embedded. No "what should I create?" confusion, no incomplete specifications, no lost requirements. Everything needed is delivered instantly.
+When CODE mode calls `get-todo`, it receives the complete task with full work instructions and verbatim file content embedded. There's no "what should I create?" confusion, no incomplete specifications, and no lost requirements. Everything needed is delivered instantly.
 
-**📈 Automatic completion tracking:**
-When CODE mode calls `complete-todo`, the MCP server updates its internal state. The orchestrator doesn't track progress - the server does. Next `get-next-todo-id` automatically returns the next incomplete task.
+The system provides automatic completion tracking when CODE mode calls `complete-todo`. The MCP server updates its internal state while the orchestrator doesn't track progress - the server handles that. The next `get-next-todo-id` call automatically returns the next incomplete task.
 
-**Gains vs manual approach:**
+This approach delivers massive gains versus manual file management. The orchestrator context stays minimal with just coordination logic, while the server handles all file operations automatically. The server maintains state so agents don't need to remember progress. Token efficiency improves by 90% compared to full-content passing. Agents can't lose track, miss files, or get confused about progress, and each CODE mode subtask operates in perfect isolation with complete context.
 
-- **No context bloat:** Orchestrator context stays minimal - just coordination logic
-- **No file management:** Server handles all file operations automatically
-- **No progress tracking:** Server maintains state, agents don't need to remember
-- **Token efficiency:** 90% reduction in coordination tokens vs full-content passing
-- **Error elimination:** Agents can't lose track, miss files, or get confused about progress
-- **Perfect isolation:** Each CODE mode subtask is independent with complete context
-
-**Result:** The MCP server is the brains handling all complexity. Agents are pure muscle executing simple, clear tasks. Perfect for 3B+ models that get overwhelmed by file management and state tracking.
+The result is that the MCP server becomes the brains handling all complexity while agents are pure muscle executing simple, clear tasks. This approach is perfect for 3B+ models that get overwhelmed by file management and state tracking.
 
 ## 🎯 Alternative Direct Workflow
 
@@ -343,28 +331,21 @@ You: "Continue this pattern - use get-next-todo, convert to TypeScript with prop
 
 **What's happening in this workflow:**
 
-**`bulk-add-todos` power:** Same brain function - MCP server reads all task files, creates todos with embedded work instructions and file content. You don't manually track what needs to be done, copy/paste requirements, or manage task lists. One command loads everything.
+This workflow demonstrates the same brain function where the MCP server reads all task files and creates todos with embedded work instructions and file content. You don't manually track what needs to be done, copy/paste requirements, or manage task lists because one command loads everything.
 
-**`get-next-todo` efficiency:** Unlike the orchestrator workflow, you get the full task content immediately. The MCP server delivers complete work instructions plus existing file content. No separate `get-todo` call needed - everything in one response.
+The `get-next-todo` call delivers immediate efficiency unlike the orchestrator workflow. You get the full task content immediately as the MCP server delivers complete work instructions plus existing file content. No separate `get-todo` call is needed because everything comes in one response.
 
-**Embedded instructions advantage:** Each task includes completion instructions with the exact ID. The AI doesn't need to remember IDs, doesn't need to ask "what's the ID for this task?" The task itself provides the completion path.
+Each task includes embedded completion instructions with the exact ID, providing a significant advantage. The AI doesn't need to remember IDs and doesn't need to ask "what's the ID for this task?" because the task itself provides the completion path.
 
-**Human guidance integration:** You provide specific technical direction ("add interfaces, type variables") while the MCP server handles the mechanical parts (file content, progress tracking, task sequencing). Best of both worlds.
+Human guidance integration creates the best of both worlds. You provide specific technical direction like "add interfaces, type variables" while the MCP server handles the mechanical parts including file content, progress tracking, and task sequencing.
 
-**Automatic progress management:** When the AI completes a task, the MCP server updates internally. Next `get-next-todo` automatically serves the next file. You don't track "did we do Header.jsx yet?" - the server knows.
+The system provides automatic progress management when the AI completes a task and the MCP server updates internally. The next `get-next-todo` call automatically serves the next file. You don't track "did we do Header.jsx yet?" because the server knows.
 
-**Context optimization benefits:** The AI's context contains only current task content, not all 47 files. No context bloat, no confusion about which file to work on, no "scroll up to find the file content" problems.
+Context optimization delivers significant benefits as the AI's context contains only current task content, not all 47 files. There's no context bloat, no confusion about which file to work on, and no "scroll up to find the file content" problems.
 
-**Gains vs manual file management:**
+The gains versus manual file management are substantial. The server delivers content automatically so there's never a "please show me the file" request. The server tracks what's done so the agent never loses place. Each task provides a clean slate with complete context, eliminating pollution. Tasks include their own completion instructions, removing ID management burden. This creates consistent quality with the same task structure and completion pattern for all 47 files. Human oversight guides the work while the server handles the logistics.
 
-- **No file hunting:** Server delivers content automatically, never "please show me the file"
-- **No progress confusion:** Server tracks what's done, agent never loses place
-- **No context pollution:** Clean slate for each task with complete context provided
-- **No ID management:** Task includes its own completion instructions
-- **Consistent quality:** Same task structure and completion pattern for all 47 files
-- **Human oversight:** You guide the work while server handles the logistics
-
-**Result:** MCP server is the brains providing perfect task delivery and progress tracking. You provide the strategy and technical guidance. AI is the muscle executing with complete, clean context every time. Ideal for complex work requiring human direction but automated file management.
+The result is that the MCP server becomes the brains providing perfect task delivery and progress tracking. You provide the strategy and technical guidance while the AI serves as the muscle executing with complete, clean context every time. This approach is ideal for complex work requiring human direction but automated file management.
 
 ## 🎯 Why This Works for All AI Models
 
