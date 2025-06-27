@@ -1,15 +1,17 @@
 # Mini Todo List MCP
 
-🚀 **Supercharge your AI agents** - This MCP server handles file reading, task tracking, and workflow management automatically. Designed for smaller AI models that get confused with file operations, but also dramatically improves larger models by eliminating manual file juggling.
+🚀 **Supercharge your AI agents** - This MCP server handles file reading, task tracking, and workflow management automatically. **As a preliminary step, the work needs to be organized into task files** - this is essential for this tool and for having smaller AI models complete discrete units of work. Designed specifically for smaller AI models (7B, 8B, 3B Instruct) that get confused with file operations, but also dramatically improves the performance of larger models by eliminating manual file juggling.
 
-## 🚀 Quick Start
+## 🚀 Installation
 
-### Install
+### Option 1: Local Install (Recommended)
+
 ```bash
 npm install mini-todo-list-mcp
 ```
 
-### Claude Desktop Config
+**Claude Desktop config:**
+
 ```json
 {
   "mcpServers": {
@@ -21,80 +23,195 @@ npm install mini-todo-list-mcp
 }
 ```
 
-### Try It
+### Option 2: Global Install
+
+```bash
+npm install -g mini-todo-list-mcp
 ```
-"Use bulk-add-todos with folderPath /my/project/tasks"
-"Use get-next-todo"
+
+**Claude Desktop config:**
+
+```json
+{
+  "mcpServers": {
+    "mini-todo": {
+      "command": "mini-todo-list-mcp"
+    }
+  }
+}
 ```
 
-## 🔧 Core Tools
+### Option 3: Use with npx (No Installation)
 
-| Tool | Purpose | Example |
-|------|---------|---------|
-| `bulk-add-todos` | Load tasks from folder | "Create tasks from /my/project/tasks" |
-| `get-next-todo` | Get next task to work on | "What should I work on next?" |
-| `get-next-todo-id` | Get next task ID only | "What's my next task ID?" |
-| `get-todo` | Get specific task details | "Show me todo 5" |
-| `create-todo` | Create single task | "Create todo to fix login bug" |
-| `update-todo` | Modify existing task | "Update todo 3 with new requirements" |
-| `complete-todo` | Mark task as done | "Complete task 5" |
-| `delete-todo` | Remove task | "Delete todo 7" |
-| `clear-all-todos` | Start fresh | "Clear all todos" |
+**Claude Desktop config:**
 
-## 🎯 Two Main Workflows
+```json
+{
+  "mcpServers": {
+    "mini-todo": {
+      "command": "npx",
+      "args": ["mini-todo-list-mcp"]
+    }
+  }
+}
+```
 
-### 1. Orchestrator + Agent Pattern
-Perfect for **Cline/Roo Code** automated workflows:
+## Core Tools
 
-1. **Prepare:** Create task files with complete instructions
-2. **Load:** `bulk-add-todos` reads all files and creates numbered tasks
-3. **Orchestrate:** Orchestrator calls `get-next-todo-id` for minimal coordination
-4. **Execute:** Agent calls `get-todo` for full context and completes work
-5. **Repeat:** Automatic progression through all tasks
+### 📝 Task Creation
+| Tool | Parameters | Purpose |
+|------|------------|--------|
+| `create-todo` | `title` (required): Task name<br>`description` (required): Task details<br>`filePath` (optional): File to embed | Create single task |
+| `bulk-add-todos` | `folderPath` (required): Directory to scan<br>`clearAll` (optional): Clear existing todos first | Create tasks from folder |
 
-**Benefits:** Minimal token usage, perfect isolation, automated progress tracking
+### 🔍 Task Retrieval  
+| Tool | Parameters | Purpose |
+|------|------------|--------|
+| `get-next-todo` | No parameters | Get next task to work on |
+| `get-todo` | `id` (required): Todo ID number | Get specific task details |
+| `get-next-todo-id` | No parameters | Get next task ID only |
 
-### 2. Direct Human-Guided Pattern
-Ideal for **interactive work** with human oversight:
+### ✏️ Task Management
+| Tool | Parameters | Purpose |
+|------|------------|--------|
+| `update-todo` | `id` (required): Todo ID number<br>`title` (optional): New task name<br>`description` (optional): New task details | Modify existing task |
+| `complete-todo` | `id` (required): Todo ID number | Mark task as done |
+| `delete-todo` | `id` (required): Todo ID number | Remove task permanently |
 
-1. **Prepare:** Create task files with work instructions
-2. **Load:** `bulk-add-todos` creates tasks with embedded file content
-3. **Work:** `get-next-todo` provides complete task context
-4. **Complete:** Follow embedded completion instructions
-5. **Continue:** Repeat with human guidance
+### 🗂️ Bulk Operations
+| Tool | Parameters | Purpose |
+|------|------------|--------|
+| `clear-all-todos` | No parameters | Start fresh |
 
-**Benefits:** Full context delivery, human direction, automated file management
+## 🎯 Real Orchestrator + Agent Workflow (Roo Code/Cline)
 
-## 🎯 Why This Works
+### Setup
+1. **You create task files** with complete instructions for each piece of work:
+   
+   See example task files: [/tasks/](https://github.com/ChrisColeTech/mini-todo-list-mcp/tree/main/tasks)
 
-**For smaller models (3B-8B):** Eliminates file operation confusion, provides clear task context
+2. **You tell the orchestrator LLM**:
+   ```
+   "Use bulk-add-todos with folderPath /home/user/tasks. Then repeatedly call 
+   get-next-todo-id and create CODE mode subtasks until no more todos."
+   ```
 
-**For larger models:** Reduces token usage, eliminates manual file management, maintains focus
+   The orchestrator coordinates the work by getting task IDs and delegating actual implementation work to specialized CODE mode agents who create files, write code, and implement features.
 
-**For humans:** Provides oversight while automating the mechanical parts
+### Execution Flow
 
-## 🔧 File Processing
+**1. Orchestrator loads all tasks**
+- Orchestrator calls `bulk-add-todos` with folderPath: `/home/user/tasks`
+- MCP server responds: `✅ Created 10 todos`
+
+**2. Orchestrator gets next task ID** 
+- Orchestrator calls `get-next-todo-id`
+- MCP server responds: `ID: 1, Task Number: 1`
+
+**3. Orchestrator creates subtask for CODE mode**
+- Orchestrator creates subtask: "Call get-todo with id 1, complete the task, call complete-todo with id 1"
+- Subtask is assigned to CODE mode LLM
+
+**4. CODE mode completes the actual work**
+- CODE mode calls `get-todo` with id: 1  
+- MCP server returns full todo item with embedded file content and detailed instructions
+- CODE mode executes the task by: creating new files, writing actual code, implementing features, refactoring existing code, adding tests, or whatever specific work the task requires
+- CODE mode calls `complete-todo` with id: 1
+- CODE mode returns "subtask complete" to orchestrator
+
+**5. Process repeats until done**
+- Orchestrator calls `get-next-todo-id` again
+- Process repeats until no more todos remain
+
+This orchestrator pattern works by having one LLM coordinate the overall project while specialized CODE agents handle the actual implementation. The orchestrator never sees file content—it only manages task IDs and creates subtasks. Each CODE agent gets complete context for one specific task and does the real work: writing code, creating files, implementing features, or refactoring components. This separation dramatically reduces token usage while ensuring perfect task isolation.
+
+### Key Benefits
+- **Minimal tokens**: Orchestrator only gets task IDs for coordination, not full file content
+- **No state tracking**: MCP server remembers all progress, LLMs don't need to track anything
+- **Perfect isolation**: Each CODE mode subtask gets complete context without pollution
+- **90% token reduction**: Compared to manual file management workflows
+
+## 🎯 Alternative Direct Workflow
+
+### Setup
+1. **You create task files** with work instructions and existing file content:
+   
+   See example task files: [/tasks/](https://github.com/ChrisColeTech/mini-todo-list-mcp/tree/main/tasks)
+
+2. **You give the LLM a single instruction to complete all work**:
+   ```
+   "Use bulk-add-todos with folderPath /home/user/component-tasks. Then repeatedly call 
+   get-next-todo, implement each todo's requirements by creating files and writing code, 
+   then call complete-todo with the todo's ID. Repeat until no more todos."
+   ```
+
+### Execution Flow
+
+**1. LLM loads all tasks**
+- LLM calls `bulk-add-todos` with folderPath: `/home/user/component-tasks`
+- MCP server responds: `✅ Created 15 todos`
+
+**2. LLM gets full todo and implements it**  
+- LLM calls `get-next-todo`
+- MCP server returns full todo item with embedded file content and instructions
+- LLM implements the todo by actually doing the required work: creating files, writing code, refactoring components, adding tests, or whatever the task specifies
+- LLM calls `complete-todo` with the ID from the todo
+
+**3. Process repeats automatically until done**
+- LLM calls `get-next-todo` again
+- MCP server returns next full todo item
+- Process repeats until no more todos remain
+
+This direct approach has one LLM handle the entire workflow from start to finish. The LLM loads all tasks, then systematically works through each one—getting the full task content, implementing the required changes by actually writing code and creating files, then marking it complete. This creates a clean, focused workflow where the LLM sees only one task at a time but maintains control over the entire process.
+
+### Key Benefits
+- **Full context delivery**: Each task includes complete file content and instructions
+- **No ID management burden**: Tasks include their own completion instructions embedded
+- **Human-LLM collaboration**: You provide technical direction while MCP server handles file logistics
+- **Clean context per task**: LLM sees only current task content, not all 47 files simultaneously
+
+## 🎯 Why This Works for All LLMs
+
+**Designed for smaller LLMs (7B, 8B, 3B Instruct) that struggle with:**
+
+- Reading folders and listing files
+- Keeping task lists in memory
+- Tracking progress as tasks are completed
+- Complex tool calling for file operations
+
+**But also dramatically improves larger LLMs by:**
+
+- Eliminating manual file copy/paste workflows
+- Providing systematic task progression
+- Maintaining perfect context across long sessions
+- Reducing token usage and cognitive overhead
+
+**The MCP Solution:**
+
+- ✅ **Automatic file operations** - MCP server reads folders, parses files, creates tasks
+- ✅ **Persistent workflow memory** - MCP server tracks all progress, never loses state
+- ✅ **Simple tool interface** - LLMs just call tools, MCP server does all the work
+- ✅ **Embedded context** - Full file content delivered in each response
+
+**Result:** Both smaller and larger LLMs work more efficiently, make fewer mistakes, and maintain focus on actual tasks instead of housekeeping.
+
+## 🔧 File Processing Power
 
 Automatically processes **60+ file types** including:
-- **Code:** `.js`, `.ts`, `.py`, `.java`, `.cpp`, `.rs`, `.go`
-- **Web:** `.html`, `.css`, `.scss`, `.xml`, `.svg`
-- **Config:** `.json`, `.yaml`, `.env`, `.ini`
-- **Docs:** `.md`, `.txt`, `.rst`
-- **Scripts:** `.sh`, `.ps1`, `.bat`
 
-## 📖 Documentation
+**Code Files:** `.js`, `.ts`, `.py`, `.rb`, `.go`, `.java`, `.c`, `.cpp`, `.php`, `.swift`, `.kt`, `.rs`  
+**Web Files:** `.html`, `.css`, `.scss`, `.xml`, `.svg`  
+**Config Files:** `.json`, `.yaml`, `.toml`, `.env`, `.ini`  
+**Documentation:** `.md`, `.txt`, `.rst`, `.tex`  
+**Scripts:** `.sh`, `.ps1`, `.bat`, `.fish`  
+**Data Files:** `.csv`, `.sql`, `.log`
 
-- **[README-full.md](README-full.md)** - Complete documentation with detailed examples
-- **[Installation Options](README-full.md#installation)** - Global install, npx usage
-- **[Workflow Examples](README-full.md#workflows)** - Step-by-step examples with source code
+## 🚀 Get Started Now
 
-## 🚀 Get Started
+Add to Claude Desktop config and try:
 
-1. Install the package
-2. Add to Claude Desktop config
-3. Create task files with work instructions
-4. Use `bulk-add-todos` to load everything
-5. Use `get-next-todo` to start working
+- "Use bulk-add-todos with folderPath /home/user/my-project"
+- "Use get-next-todo"
 
 Let your AI focus on work, not file management.
 
