@@ -85,278 +85,95 @@ npm install -g mini-todo-list-mcp
 
 ## 🎯 Real Orchestrator + Agent Workflow (Roo Code/Cline)
 
-**Step 1: Create task files first**
+### Setup
+1. **You create task files** with complete instructions for each piece of work:
+   
+   See example task files: [/tasks/](https://github.com/ChrisColeTech/mini-todo-list-mcp/tree/main/tasks)
 
-```
-You create task files in /home/user/tasks/:
-- task_1.md: "Create user authentication: Create 'app/src/auth/login.tsx' with verbatim content: [complete file content]..."
-- task_2.md: "Create hooks: Create 'app/src/hooks/useElectron.tsx' with verbatim content: [complete file content]. Create 'app/src/hooks/useBrowser.tsx' with verbatim content: [complete file content]..."
-- task_3.md: "Add API endpoints: Create 'app/src/api/users.ts' with verbatim content: [complete file content]..."
-...etc for all planned work
-```
+2. **You tell the orchestrator LLM**:
+   ```
+   "Use bulk-add-todos with folderPath /home/user/tasks. Then repeatedly call 
+   get-next-todo-id and create CODE mode subtasks until no more todos."
+   ```
 
-**Step 2: User instruction:**
+### Execution Flow
 
-```
-You: "Use bulk-add-todos with folderPath /home/user/tasks. Once loaded, call get-next-todo-id and create a subtask for CODE mode with the ID and instructions to call get-todo and complete the assigned todo. Repeat until no more todos."
-```
+**1. Orchestrator loads all tasks into MCP server**
+- Orchestrator calls `bulk-add-todos` with folderPath: `/home/user/tasks`
+- MCP server reads all task files and responds: `✅ Created 10 todos`
 
-**Step 3: Orchestrator execution:**
+**2. Orchestrator gets next task ID for coordination** 
+- Orchestrator calls `get-next-todo-id`
+- MCP server responds with minimal data: `ID: 1, Task Number: 1`
 
-**Orchestrator calls:**
-```
-bulk-add-todos with folderPath /home/user/tasks
-```
+**3. Orchestrator creates subtask using Cline/Roo Code built-in subtask system**
+- Orchestrator uses Cline/Roo Code's subtask feature to create a new subtask assigned to CODE mode
+- Subtask contains: "Call get-todo with id 1, execute the task instructions received, call complete-todo with id 1 when finished"
+- This subtask is handed off to a separate CODE mode LLM instance
 
-**MCP server returns:**
-```
-✅ Created 10 todos from files in /home/user/tasks
-```
+**4. CODE mode LLM executes the actual work**
+- CODE mode LLM calls `get-todo` with id: 1  
+- MCP server returns full todo item with embedded file content and detailed instructions
+- CODE mode LLM creates the specified file exactly as instructed using the provided code
+- CODE mode LLM calls `complete-todo` with id: 1
+- MCP server responds: `✅ Task completed`
 
-**Orchestrator calls:**
-```
-get-next-todo-id
-```
+**5. Process repeats automatically**
+- Orchestrator goes back to step 2 until MCP server returns "All todos completed"
 
-**MCP server returns:**
-```
-ID: 1, Task Number: 1
-```
-
-**Orchestrator creates subtask using Cline/Roo Code built-in subtask system:**
-
-```
-SUBTASK assigned to CODE mode:
-- Call get-todo with id 1
-- Execute the task instructions received
-- Call complete-todo with id 1 when finished
-```
-
-**CODE mode calls:**
-```
-get-todo with id 1
-```
-
-**MCP server returns:**
-
-```
-## Task 1: task_1 ⏳
-**Source File:** /home/user/tasks/task_1.md
-
-Create user authentication: Create 'app/src/auth/login.tsx' with verbatim content:
-
-import React, { useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
-
-const LoginForm: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const { login, loading } = useAuth();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await login(email, password);
-  };
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="Email"
-      />
-      <input
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        placeholder="Password"
-      />
-      <button type="submit" disabled={loading}>
-        {loading ? 'Logging in...' : 'Login'}
-      </button>
-    </form>
-  );
-};
-
-export default LoginForm;
-
-**When completed, use the complete-todo MCP tool:**
-- ID: 1
-```
-
-CODE mode creates the file exactly as specified, then calls:
-```
-complete-todo with id 1
-```
-
-**MCP server returns:**
-```
-✅ Task 1: task_1 completed
-```
-
-**Orchestrator calls:**
-```
-get-next-todo-id
-```
-
-**MCP server returns:**
-```
-ID: 2, Task Number: 2
-```
-
-**Orchestrator creates new subtask for CODE mode with id 2**
-Process repeats through all task files...
-
-**Final call:**
-
-**Orchestrator calls:**
-```
-get-next-todo-id
-```
-
-**MCP server returns:**
-```
-All todos have been completed
-```
-
-Orchestrator stops - workflow finished.
-
-### What's happening in this workflow:
-
-The workflow starts when `bulk-add-todos` transforms the MCP server into the brains of the operation. It scans the task folder, reads every task file, and creates numbered todos with complete instructions embedded. The orchestrator doesn't need to remember what work needs to be done, doesn't need to track which tasks exist, and doesn't waste tokens managing task lists. One call loads everything.
-
-When the orchestrator calls `get-next-todo-id`, it receives minimal coordination data like "ID: 1, Task Number: 1" instead of expensive full file content. The orchestrator doesn't need to store file content in context or remember what task comes next - the MCP server becomes the memory.
-
-The orchestrator then creates simple, identical subtasks with the pattern "get todo 1, do work, complete todo 1." There are no complex instructions to remember, no file paths to track, and no context juggling. The CODE mode gets fresh, complete context via `get-todo` when needed.
-
-When CODE mode calls `get-todo`, it receives the complete task with full work instructions and verbatim file content embedded. There's no "what should I create?" confusion, no incomplete specifications, and no lost requirements. Everything needed is delivered instantly.
-
-The system provides automatic completion tracking when CODE mode calls `complete-todo`. The MCP server updates its internal state while the orchestrator doesn't track progress - the server handles that. The next `get-next-todo-id` call automatically returns the next incomplete task.
-
-This approach delivers massive gains versus manual file management. The orchestrator context stays minimal with just coordination logic, while the server handles all file operations automatically. The server maintains state so agents don't need to remember progress. Token efficiency improves by 90% compared to full-content passing. Agents can't lose track, miss files, or get confused about progress, and each CODE mode subtask operates in perfect isolation with complete context.
-
-The result is that the MCP server becomes the brains handling all complexity while agents are pure muscle executing simple, clear tasks. This approach is perfect for 3B+ models that get overwhelmed by file management and state tracking.
+### Key Benefits
+- **Minimal tokens**: Orchestrator only gets task IDs for coordination, not full file content
+- **No state tracking**: MCP server remembers all progress, LLMs don't need to track anything
+- **Perfect isolation**: Each CODE mode subtask gets complete context without pollution
+- **90% token reduction**: Compared to manual file management workflows
 
 ## 🎯 Alternative Direct Workflow
 
-**Step 1: Create task files first**
+### Setup
+1. **You create task files** with work instructions and existing file content:
+   
+   See example task files: [/tasks/](https://github.com/ChrisColeTech/mini-todo-list-mcp/tree/main/tasks)
 
-```
-You create task files in /home/user/component-tasks/:
-- task_1.md: "Convert Header component to TypeScript: Update 'app/src/Header.jsx' - add proper prop interfaces, type all variables, ensure type safety. Current file: [complete existing file content]"
-- task_2.md: "Convert Footer component to TypeScript: Update 'app/src/Footer.jsx' - add proper prop interfaces, type all variables, ensure type safety. Current file: [complete existing file content]"
-...etc for all components
-```
+2. **You give the LLM a single instruction to complete all work**:
+   ```
+   You: "Use bulk-add-todos with folderPath /home/user/component-tasks to load all tasks.
+   Then call get-next-todo to get the first task, complete it, and continue calling 
+   get-next-todo until the MCP server returns 'All todos have been completed'."
+   ```
 
-**Step 2: Load all task files**
+### Execution Flow
 
-```
-You: "Use bulk-add-todos with folderPath /home/user/component-tasks to create tasks for TypeScript conversion."
-```
+**1. LLM loads all tasks**
+- LLM calls `bulk-add-todos` with folderPath: `/home/user/component-tasks`
+- MCP server responds: `✅ Created 15 todos`
 
-**MCP server returns:** `✅ Created 15 todos from files in /home/user/component-tasks`
+**2. LLM gets and works on each task automatically**  
+- LLM calls `get-next-todo`
+- MCP server returns full todo item with embedded file content and completion instructions
+- LLM converts component to TypeScript following the task instructions
+- LLM calls `complete-todo` with the ID provided in the task
 
-**Step 3: Get first task and provide specific instructions**
+**3. LLM continues automatically until done**
+- LLM calls `get-next-todo` again
+- MCP server returns next todo item or "All todos completed"
+- Process repeats automatically until all components are converted
 
-```
-You: "Use get-next-todo to get the first conversion task. Follow the completion instructions when done."
-```
+### Key Benefits
+- **Full context delivery**: Each task includes complete file content and instructions
+- **No ID management burden**: Tasks include their own completion instructions embedded
+- **Human-LLM collaboration**: You provide technical direction while MCP server handles file logistics
+- **Clean context per task**: LLM sees only current task content, not all 47 files simultaneously
 
-**MCP server returns:**
+## 🎯 Why This Works for All LLMs
 
-```
-## Task 1: task_1 ⏳
-**Source File:** /home/user/component-tasks/task_1.md
-
-Convert Header component to TypeScript: Update 'app/src/Header.jsx' - add proper prop interfaces, type all variables, ensure type safety. Current file:
-
-import React from 'react';
-import './Header.css';
-
-const Header = ({ title, subtitle, onMenuClick, isMenuOpen, user }) => {
-  return (
-    <header className="main-header">
-      <div className="header-content">
-        <button
-          className="menu-toggle"
-          onClick={onMenuClick}
-          aria-label="Toggle menu"
-        >
-          <span className={`hamburger ${isMenuOpen ? 'open' : ''}`}></span>
-        </button>
-
-        <div className="header-titles">
-          <h1>{title}</h1>
-          {subtitle && <h2>{subtitle}</h2>}
-        </div>
-
-        <div className="user-section">
-          {user ? (
-            <div className="user-info">
-              <img src={user.avatar} alt="User avatar" />
-              <span>{user.name}</span>
-            </div>
-          ) : (
-            <button className="login-btn">Login</button>
-          )}
-        </div>
-      </div>
-    </header>
-  );
-};
-
-export default Header;
-
-**When completed, use the complete-todo MCP tool:**
-- ID: 1
-```
-
-AI converts component to TypeScript, then calls `complete-todo with id 1`
-
-**Step 4: Continue with clear instructions**
-
-```
-You: "Use get-next-todo to get the next conversion task. Follow the same TypeScript conversion pattern. Complete the todo when finished."
-```
-
-**MCP server returns:** Next task with embedded content and existing file
-AI converts component, calls `complete-todo with id 2`
-
-**Step 5: Repeat with consistent instructions**
-
-```
-You: "Continue this pattern - use get-next-todo, convert to TypeScript with proper types, complete the todo. Repeat until all components are converted."
-```
-
-**What's happening in this workflow:**
-
-This workflow demonstrates the same brain function where the MCP server reads all task files and creates todos with embedded work instructions and file content. You don't manually track what needs to be done, copy/paste requirements, or manage task lists because one command loads everything.
-
-The `get-next-todo` call delivers immediate efficiency unlike the orchestrator workflow. You get the full task content immediately as the MCP server delivers complete work instructions plus existing file content. No separate `get-todo` call is needed because everything comes in one response.
-
-Each task includes embedded completion instructions with the exact ID, providing a significant advantage. The AI doesn't need to remember IDs and doesn't need to ask "what's the ID for this task?" because the task itself provides the completion path.
-
-Human guidance integration creates the best of both worlds. You provide specific technical direction like "add interfaces, type variables" while the MCP server handles the mechanical parts including file content, progress tracking, and task sequencing.
-
-The system provides automatic progress management when the AI completes a task and the MCP server updates internally. The next `get-next-todo` call automatically serves the next file. You don't track "did we do Header.jsx yet?" because the server knows.
-
-Context optimization delivers significant benefits as the AI's context contains only current task content, not all 47 files. There's no context bloat, no confusion about which file to work on, and no "scroll up to find the file content" problems.
-
-The gains versus manual file management are substantial. The server delivers content automatically so there's never a "please show me the file" request. The server tracks what's done so the agent never loses place. Each task provides a clean slate with complete context, eliminating pollution. Tasks include their own completion instructions, removing ID management burden. This creates consistent quality with the same task structure and completion pattern for all 47 files. Human oversight guides the work while the server handles the logistics.
-
-The result is that the MCP server becomes the brains providing perfect task delivery and progress tracking. You provide the strategy and technical guidance while the AI serves as the muscle executing with complete, clean context every time. This approach is ideal for complex work requiring human direction but automated file management.
-
-## 🎯 Why This Works for All AI Models
-
-**Designed for smaller models (7B, 8B, 3B Instruct) that struggle with:**
+**Designed for smaller LLMs (7B, 8B, 3B Instruct) that struggle with:**
 
 - Reading folders and listing files
 - Keeping task lists in memory
 - Tracking progress as tasks are completed
 - Complex tool calling for file operations
 
-**But also dramatically improves larger models by:**
+**But also dramatically improves larger LLMs by:**
 
 - Eliminating manual file copy/paste workflows
 - Providing systematic task progression
@@ -365,12 +182,12 @@ The result is that the MCP server becomes the brains providing perfect task deli
 
 **The MCP Solution:**
 
-- ✅ **Automatic file operations** - Server reads folders, parses files, creates tasks
-- ✅ **Persistent workflow memory** - Server tracks all progress, never loses state
-- ✅ **Simple tool interface** - AI just calls tools, server does all the work
+- ✅ **Automatic file operations** - MCP server reads folders, parses files, creates tasks
+- ✅ **Persistent workflow memory** - MCP server tracks all progress, never loses state
+- ✅ **Simple tool interface** - LLMs just call tools, MCP server does all the work
 - ✅ **Embedded context** - Full file content delivered in each response
 
-**Result:** Both smaller and larger AI models work more efficiently, make fewer mistakes, and maintain focus on actual tasks instead of housekeeping.
+**Result:** Both smaller and larger LLMs work more efficiently, make fewer mistakes, and maintain focus on actual tasks instead of housekeeping.
 
 ## 🔧 File Processing Power
 
