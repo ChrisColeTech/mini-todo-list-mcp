@@ -96,30 +96,34 @@ npm install -g mini-todo-list-mcp
    get-next-todo-id and create CODE mode subtasks until no more todos."
    ```
 
+   The orchestrator coordinates the work by getting task IDs and delegating actual implementation work to specialized CODE mode agents who create files, write code, and implement features.
+
 ### Execution Flow
 
-**1. Orchestrator loads all tasks into MCP server**
+**1. Orchestrator loads all tasks**
 - Orchestrator calls `bulk-add-todos` with folderPath: `/home/user/tasks`
-- MCP server reads all task files and responds: `✅ Created 10 todos`
+- MCP server responds: `✅ Created 10 todos`
 
-**2. Orchestrator gets next task ID for coordination** 
+**2. Orchestrator gets next task ID** 
 - Orchestrator calls `get-next-todo-id`
-- MCP server responds with minimal data: `ID: 1, Task Number: 1`
+- MCP server responds: `ID: 1, Task Number: 1`
 
-**3. Orchestrator creates subtask using Cline/Roo Code built-in subtask system**
-- Orchestrator uses Cline/Roo Code's subtask feature to create a new subtask assigned to CODE mode
-- Subtask contains: "Call get-todo with id 1, execute the task instructions received, call complete-todo with id 1 when finished"
-- This subtask is handed off to a separate CODE mode LLM instance
+**3. Orchestrator creates subtask for CODE mode**
+- Orchestrator creates subtask: "Call get-todo with id 1, complete the task, call complete-todo with id 1"
+- Subtask is assigned to CODE mode LLM
 
-**4. CODE mode LLM executes the actual work**
-- CODE mode LLM calls `get-todo` with id: 1  
-- MCP server returns the full todo item with embedded file content and instructions
-- CODE mode LLM creates the specified file exactly as instructed using the provided code
-- CODE mode LLM calls `complete-todo` with id: 1
-- MCP server responds: `✅ Task completed`
+**4. CODE mode completes the actual work**
+- CODE mode calls `get-todo` with id: 1  
+- MCP server returns full todo item with embedded file content and detailed instructions
+- CODE mode executes the task by: creating new files, writing actual code, implementing features, refactoring existing code, adding tests, or whatever specific work the task requires
+- CODE mode calls `complete-todo` with id: 1
+- CODE mode returns "subtask complete" to orchestrator
 
-**5. Process repeats automatically**
-- Orchestrator goes back to step 2 until MCP server returns "All todos completed"
+**5. Process repeats until done**
+- Orchestrator calls `get-next-todo-id` again
+- Process repeats until no more todos remain
+
+This orchestrator pattern works by having one LLM coordinate the overall project while specialized CODE agents handle the actual implementation. The orchestrator never sees file content—it only manages task IDs and creates subtasks. Each CODE agent gets complete context for one specific task and does the real work: writing code, creating files, implementing features, or refactoring components. This separation dramatically reduces token usage while ensuring perfect task isolation.
 
 ### Key Benefits
 - **Minimal tokens**: Orchestrator only gets task IDs for coordination, not full file content
@@ -136,9 +140,9 @@ npm install -g mini-todo-list-mcp
 
 2. **You give the LLM a single instruction to complete all work**:
    ```
-   You: "Use bulk-add-todos with folderPath /home/user/component-tasks to load all tasks.
-   Then call get-next-todo to get the first task, complete it, and continue calling 
-   get-next-todo until the MCP server returns 'All todos have been completed'."
+   "Use bulk-add-todos with folderPath /home/user/component-tasks. Then repeatedly call 
+   get-next-todo, implement each todo's requirements by creating files and writing code, 
+   then call complete-todo with the todo's ID. Repeat until no more todos."
    ```
 
 ### Execution Flow
@@ -147,16 +151,18 @@ npm install -g mini-todo-list-mcp
 - LLM calls `bulk-add-todos` with folderPath: `/home/user/component-tasks`
 - MCP server responds: `✅ Created 15 todos`
 
-**2. LLM gets and works on each task automatically**  
+**2. LLM gets full todo and implements it**  
 - LLM calls `get-next-todo`
-- MCP server returns full todo item with embedded file content and completion instructions
-- LLM converts component to TypeScript following the task instructions
-- LLM calls `complete-todo` with the ID provided in the task
+- MCP server returns full todo item with embedded file content and instructions
+- LLM implements the todo by actually doing the required work: creating files, writing code, refactoring components, adding tests, or whatever the task specifies
+- LLM calls `complete-todo` with the ID from the todo
 
-**3. LLM continues automatically until done**
+**3. Process repeats automatically until done**
 - LLM calls `get-next-todo` again
-- MCP server returns next todo item or "All todos completed"
-- Process repeats automatically until all components are converted
+- MCP server returns next full todo item
+- Process repeats until no more todos remain
+
+This direct approach has one LLM handle the entire workflow from start to finish. The LLM loads all tasks, then systematically works through each one—getting the full task content, implementing the required changes by actually writing code and creating files, then marking it complete. This creates a clean, focused workflow where the LLM sees only one task at a time but maintains control over the entire process.
 
 ### Key Benefits
 - **Full context delivery**: Each task includes complete file content and instructions
