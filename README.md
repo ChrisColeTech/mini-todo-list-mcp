@@ -1,5 +1,16 @@
 # Mini Todo List MCP
 
+[![CI Status](https://github.com/ChrisColeTech/mini-todo-list-mcp/workflows/CI/badge.svg)](https://github.com/ChrisColeTech/mini-todo-list-mcp/actions)
+[![NPM Version](https://img.shields.io/npm/v/mini-todo-list-mcp.svg)](https://www.npmjs.com/package/mini-todo-list-mcp)
+[![NPM Downloads](https://img.shields.io/npm/dm/mini-todo-list-mcp.svg)](https://www.npmjs.com/package/mini-todo-list-mcp)
+[![GitHub Stars](https://img.shields.io/github/stars/ChrisColeTech/mini-todo-list-mcp.svg)](https://github.com/ChrisColeTech/mini-todo-list-mcp/stargazers)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+[![Node Version](https://img.shields.io/node/v/mini-todo-list-mcp.svg)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![MCP Compatible](https://img.shields.io/badge/MCP-Compatible-brightgreen.svg)](https://modelcontextprotocol.io/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/ChrisColeTech/mini-todo-list-mcp/pulls)
+
 🚀 **Supercharge your AI agents** - This MCP server handles file reading, task tracking, and workflow management automatically. **As a preliminary step, the work needs to be organized into task files** - this is essential for this tool and for having smaller AI models complete discrete units of work. Designed specifically for smaller AI models (7B, 8B, 3B Instruct) that get confused with file operations, but also dramatically improves the performance of larger models by eliminating manual file juggling.
 
 ## 🚀 Installation

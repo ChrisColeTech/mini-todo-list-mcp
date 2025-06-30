@@ -7,6 +7,17 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 
+// Read version from package.json
+const getVersion = (): string => {
+  try {
+    const packageJsonPath = path.join(__dirname, '..', 'package.json');
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+    return packageJson.version;
+  } catch (error) {
+    return '1.0.0'; // fallback version
+  }
+};
+
 /**
  * Configuration object for the mini todo server
  */
@@ -16,7 +27,7 @@ export const config = {
   },
   server: {
     name: 'Mini-Todo-MCP-Server',
-    version: '1.0.0',
+    version: getVersion(),
   },
 };
 
