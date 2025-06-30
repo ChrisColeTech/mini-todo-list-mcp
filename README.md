@@ -61,33 +61,33 @@ npm install -g mini-todo-list-mcp
 ### 📝 Task Creation
 | Tool | Parameters | Purpose |
 |------|------------|--------|
-| `create-todo` | `title` (required): Task name<br>`description` (required): Task details<br>`filePath` (optional): File to embed | Create single task |
-| `bulk-add-todos` | `folderPath` (required): Directory to scan<br>`clearAll` (optional): Clear existing todos first | Create tasks from folder |
+| `create-todo` | `title` (required): Task name<br>`description` (required): Task details<br>`filePath` (optional): File to embed | Creates single todo with auto-assigned task number. If filePath provided, embeds entire file content in description |
+| `bulk-add-todos` | `folderPath` (required): Directory to scan<br>`clearAll` (optional): Clear existing todos first | Recursively scans folder, creates one todo per file with embedded content. Adds to existing todos unless clearAll=true |
 
 ### 🔍 Task Retrieval  
 | Tool | Parameters | Purpose |
 |------|------------|--------|
-| `get-next-todo` | No parameters | Get next task to work on |
-| `get-todo` | `id` (required): Todo ID number | Get specific task details |
-| `get-next-todo-id` | No parameters | Get next task ID only |
+| `get-next-todo` | No parameters | Returns next incomplete todo with full content (lowest task number, status != 'Done') |
+| `get-todo` | `id` (required): Todo ID number | Returns specific todo with full content including embedded file content |
+| `get-next-todo-id` | No parameters | Returns only ID and task number of next incomplete todo (no content) |
 
 ### ✏️ Task Management
 | Tool | Parameters | Purpose |
 |------|------------|--------|
-| `update-todo` | `id` (required): Todo ID number<br>`title` (optional): New task name<br>`description` (optional): New task details | Modify existing task |
-| `complete-todo` | `id` (required): Todo ID number | Mark task as done |
-| `delete-todo` | `id` (required): Todo ID number | Remove task permanently |
+| `update-todo` | `id` (required): Todo ID number<br>`title` (optional): New task name<br>`description` (optional): New task details | Updates existing todo. At least one field (title or description) required |
+| `complete-todo` | `id` (required): Todo ID number | Marks todo as completed (status='Done', sets completedAt timestamp) |
+| `delete-todo` | `id` (required): Todo ID number | Permanently removes todo from database |
 
 ### 🗂️ Bulk Operations
 | Tool | Parameters | Purpose |
 |------|------------|--------|
-| `clear-all-todos` | No parameters | Start fresh |
+| `clear-all-todos` | No parameters | Deletes all todos from database (returns count of deleted items) |
 
 ### 📋 Rules Management
 | Tool | Parameters | Purpose |
 |------|------------|--------|
-| `add-rules` | `filePath` (required): Path to rules file<br>`clearAll` (optional): Clear existing rules first | Load orchestrator rules from file |
-| `get-rules` | `id` (optional): Specific rule ID | Retrieve orchestrator instructions |
+| `add-rules` | `filePath` (required): Path to rules file<br>`clearAll` (optional): Clear existing rules first | Reads entire file content and stores as single rule. Adds to existing rules unless clearAll=true |
+| `get-rules` | `id` (optional): Specific rule ID | Returns all rules combined (no ID) or single rule (with ID) |
 
 ## 🎯 Real Orchestrator + Agent Workflow (Roo Code/Cline)
 
@@ -99,47 +99,42 @@ npm install -g mini-todo-list-mcp
 2. **You create orchestrator rules file** that includes these key instructions:
    - Step 1: `bulk-add-todos with folderPath /home/user/tasks and clearAll true`
    - Step 2: Loop through `get-next-todo-id` and create CODE mode subtasks
-   - Step 3: Use specific subtask template for CODE mode agents
    
    See complete example: [/tasks/orchestrator-rules.md](https://github.com/ChrisColeTech/mini-todo-list-mcp/blob/main/tasks/orchestrator-rules.md)
 
-3. **You tell the orchestrator LLM**:
-   ```
-   "Use add-rules with filePath c:/path/to/orchestrator-rules.md and clearAll true, 
-   then use get-rules and follow the rules verbatim."
-   ```
-
-   The orchestrator loads its behavioral rules from the MCP server (which include the `bulk-add-todos` command), then coordinates work by getting task IDs and delegating actual implementation work to specialized CODE mode agents.
-
 ### Execution Flow
 
-**1. Orchestrator loads behavioral rules**
-- Orchestrator calls `add-rules` with filePath: `c:/path/to/orchestrator-rules.md`, clearAll: true
-- Orchestrator calls `get-rules` to retrieve complete workflow instructions from MCP server
+**Step 1: You give the orchestrator instruction**
+```
+"Use add-rules with filePath c:/path/to/orchestrator-rules.md and clearAll true, 
+then use get-rules and follow the rules verbatim."
+```
 
-**2. Orchestrator follows rules to load tasks**
-- Following Step 1 in the rules: "FIRST THING YOU MUST DO: bulk-add-todos with folderPath /home/user/tasks and clearAll true"
+**Step 2: Orchestrator loads rules**
+- Orchestrator calls `add-rules` with filePath: `c:/path/to/orchestrator-rules.md`, clearAll: true
+- Orchestrator calls `get-rules` to retrieve workflow instructions
+
+**Step 3: Orchestrator loads tasks**  
 - Orchestrator calls `bulk-add-todos` with folderPath: `/home/user/tasks`, clearAll: true
 - MCP server responds: `✅ Created 10 todos`
 
-**3. Orchestrator gets next task ID** 
-- Following the rules, orchestrator calls `get-next-todo-id`
+**Step 4: Orchestrator gets next task**
+- Orchestrator calls `get-next-todo-id`
 - MCP server responds: `ID: 1, Task Number: 1`
 
-**4. Orchestrator creates subtask using rules template**
-- Using the message template from the rules, orchestrator creates subtask:
-- "Call get-todo with id 1, read the complete task instructions and file content, then implement all required changes by creating files, writing code, or making modifications as specified in the task. When the implementation is complete, call complete-todo with id 1."
+**Step 5: Orchestrator creates subtask**
+- Orchestrator creates CODE mode subtask: "Call get-todo with id 1, read the complete task instructions and file content, then implement all required changes by creating files, writing code, or making modifications as specified in the task. When the implementation is complete, call complete-todo with id 1."
 - Subtask is assigned to CODE mode LLM
 
-**5. CODE mode completes the actual work**
-- CODE mode calls `get-todo` with id: 1  
+**Step 6: CODE mode executes task**
+- CODE mode calls `get-todo` with id: 1
 - MCP server returns full todo item with embedded file content and detailed instructions
-- CODE mode executes the task by: creating new files, writing actual code, implementing features, refactoring existing code, adding tests, or whatever specific work the task requires
+- CODE mode implements all required changes
 - CODE mode calls `complete-todo` with id: 1
 - CODE mode returns "subtask complete" to orchestrator
 
-**6. Process repeats until done**
-- Orchestrator calls `get-next-todo-id` again following the rules
+**Step 7: Loop repeats**
+- Orchestrator calls `get-next-todo-id` again
 - Process repeats until `get-next-todo-id` returns "All todos have been completed"
 
 This orchestrator pattern works by having one LLM coordinate the overall project while specialized CODE agents handle the actual implementation. The orchestrator follows stored rules (via `get-rules`) to maintain consistent behavior and never sees file content—it only manages task IDs and creates subtasks. Each CODE agent gets complete context for one specific task and does the real work: writing code, creating files, implementing features, or refactoring components. This separation dramatically reduces token usage while ensuring perfect task isolation.
