@@ -96,9 +96,12 @@ npm install -g mini-todo-list-mcp
    
    See example task files: [/tasks/](https://github.com/ChrisColeTech/mini-todo-list-mcp/tree/main/tasks)
 
-2. **You create orchestrator rules file** with workflow instructions:
+2. **You create orchestrator rules file** that includes these key instructions:
+   - Step 1: `bulk-add-todos with folderPath /home/user/tasks and clearAll true`
+   - Step 2: Loop through `get-next-todo-id` and create CODE mode subtasks
+   - Step 3: Use specific subtask template for CODE mode agents
    
-   See example orchestrator rules: [/tasks/orchestrator-rules.md](https://github.com/ChrisColeTech/mini-todo-list-mcp/blob/main/tasks/orchestrator-rules.md)
+   See complete example: [/tasks/orchestrator-rules.md](https://github.com/ChrisColeTech/mini-todo-list-mcp/blob/main/tasks/orchestrator-rules.md)
 
 3. **You tell the orchestrator LLM**:
    ```
@@ -106,7 +109,7 @@ npm install -g mini-todo-list-mcp
    then use get-rules and follow the rules verbatim."
    ```
 
-   The orchestrator loads its behavioral rules from the MCP server, then coordinates work by getting task IDs and delegating actual implementation work to specialized CODE mode agents.
+   The orchestrator loads its behavioral rules from the MCP server (which include the `bulk-add-todos` command), then coordinates work by getting task IDs and delegating actual implementation work to specialized CODE mode agents.
 
 ### Execution Flow
 
