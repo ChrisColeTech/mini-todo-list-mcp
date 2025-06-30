@@ -104,28 +104,38 @@ npm install -g mini-todo-list-mcp
 
 ### Execution Flow
 
-**Step 1: Load orchestrator rules**
-- You: "Use add-rules with filePath c:/path/to/orchestrator-rules.md and clearAll true, then use get-rules and follow the rules verbatim"
-- Orchestrator calls `add-rules` 
-- Orchestrator calls `get-rules`
+**Step 1: You give the orchestrator instruction**
+```
+"Use add-rules with filePath c:/path/to/orchestrator-rules.md and clearAll true, 
+then use get-rules and follow the rules verbatim."
+```
 
-**Step 2: Load task files**  
+**Step 2: Orchestrator loads rules**
+- Orchestrator calls `add-rules` with filePath: `c:/path/to/orchestrator-rules.md`, clearAll: true
+- Orchestrator calls `get-rules` to retrieve workflow instructions
+
+**Step 3: Orchestrator loads tasks**  
 - Orchestrator calls `bulk-add-todos` with folderPath: `/home/user/tasks`, clearAll: true
 - MCP server responds: `✅ Created 10 todos`
 
-**Step 3: Get next task and delegate**
+**Step 4: Orchestrator gets next task**
 - Orchestrator calls `get-next-todo-id`
 - MCP server responds: `ID: 1, Task Number: 1`
-- Orchestrator creates CODE mode subtask: "Call get-todo with id 1, implement the task, call complete-todo with id 1"
 
-**Step 4: CODE mode executes task**
+**Step 5: Orchestrator creates subtask**
+- Orchestrator creates CODE mode subtask: "Call get-todo with id 1, read the complete task instructions and file content, then implement all required changes by creating files, writing code, or making modifications as specified in the task. When the implementation is complete, call complete-todo with id 1."
+- Subtask is assigned to CODE mode LLM
+
+**Step 6: CODE mode executes task**
 - CODE mode calls `get-todo` with id: 1
-- CODE mode implements the required changes
+- MCP server returns full todo item with embedded file content and detailed instructions
+- CODE mode implements all required changes
 - CODE mode calls `complete-todo` with id: 1
+- CODE mode returns "subtask complete" to orchestrator
 
-**Step 5: Repeat until done**
+**Step 7: Loop repeats**
 - Orchestrator calls `get-next-todo-id` again
-- Process repeats until no more todos remain
+- Process repeats until `get-next-todo-id` returns "All todos have been completed"
 
 This orchestrator pattern works by having one LLM coordinate the overall project while specialized CODE agents handle the actual implementation. The orchestrator follows stored rules (via `get-rules`) to maintain consistent behavior and never sees file content—it only manages task IDs and creates subtasks. Each CODE agent gets complete context for one specific task and does the real work: writing code, creating files, implementing features, or refactoring components. This separation dramatically reduces token usage while ensuring perfect task isolation.
 
