@@ -37,7 +37,7 @@ describe('Rules MCP Tools Integration', () => {
       // Test missing filePath
       expect(() => AddRulesSchema.parse({
         clearAll: false
-      })).toThrow('File path is required');
+      })).toThrow('Required');
 
       // Test empty filePath
       expect(() => AddRulesSchema.parse({

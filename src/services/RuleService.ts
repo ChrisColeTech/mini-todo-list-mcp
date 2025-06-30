@@ -22,7 +22,7 @@ class RuleService {
   /**
    * Add rules from a file
    */
-  async addRules(data: z.infer<typeof AddRulesSchema>): Promise<Rule[]> {
+  async addRules(data: { filePath: string; clearAll?: boolean }): Promise<Rule[]> {
     const { filePath, clearAll } = data
 
     // Clear all existing rules if requested
@@ -83,7 +83,7 @@ class RuleService {
   /**
    * Get all rules or a specific rule by ID
    */
-  getRules(data?: z.infer<typeof GetRulesSchema>): Rule[] {
+  getRules(data?: { id?: number }): Rule[] {
     const db = databaseService.getDb()
     
     if (data?.id) {

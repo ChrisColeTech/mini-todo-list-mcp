@@ -83,25 +83,51 @@ npm install -g mini-todo-list-mcp
 |------|------------|--------|
 | `clear-all-todos` | No parameters | Start fresh |
 
+### 📋 Rules Management
+| Tool | Parameters | Purpose |
+|------|------------|--------|
+| `add-rules` | `filePath` (required): Path to rules file<br>`clearAll` (optional): Clear existing rules first | Load orchestrator rules from file |
+| `get-rules` | `id` (optional): Specific rule ID | Retrieve orchestrator instructions |
+
 ## 🎯 Real Orchestrator + Agent Workflow (Roo Code/Cline)
 
 ### Setup
-1. **You create task files** with complete instructions for each piece of work:
+1. **You create orchestrator rules file** with workflow instructions:
+   ```markdown
+   # Orchestrator Rules
+
+   ## Primary Workflow
+   1. Use bulk-add-todos with folderPath /home/user/tasks and clearAll true
+   2. Repeatedly call get-next-todo-id and create CODE mode subtasks until no more todos
+   3. For each subtask, tell CODE mode: "Call get-todo with id X, complete the task, call complete-todo with id X"
+   4. Never directly implement code - only coordinate and delegate to CODE mode agents
+   5. Focus on task IDs and delegation, not file content
+
+   ## Task Assignment Rules
+   - One task per CODE mode agent
+   - Each agent gets complete context through get-todo
+   - Agents handle: file creation, code writing, implementation, testing
+   - You handle: coordination, progress tracking, next task assignment
+   ```
+
+2. **You create task files** with complete instructions for each piece of work:
    
    See example task files: [/tasks/](https://github.com/ChrisColeTech/mini-todo-list-mcp/tree/main/tasks)
 
-2. **You tell the orchestrator LLM**:
+3. **You tell the orchestrator LLM**:
    ```
-   "Use bulk-add-todos with folderPath /home/user/tasks. Then repeatedly call 
-   get-next-todo-id and create CODE mode subtasks until no more todos."
+   "Use add-rules with filePath /home/user/orchestrator-rules.md and clearAll true.
+   Then use get-rules and follow the rules verbatim."
    ```
 
-   The orchestrator coordinates the work by getting task IDs and delegating actual implementation work to specialized CODE mode agents who create files, write code, and implement features.
+   The orchestrator loads its behavioral rules, then coordinates work by getting task IDs and delegating actual implementation work to specialized CODE mode agents.
 
 ### Execution Flow
 
-**1. Orchestrator loads all tasks**
-- Orchestrator calls `bulk-add-todos` with folderPath: `/home/user/tasks`
+**1. Orchestrator loads rules and tasks**
+- Orchestrator calls `add-rules` with filePath: `/home/user/orchestrator-rules.md`, clearAll: true
+- Orchestrator calls `get-rules` to retrieve behavioral instructions
+- Orchestrator calls `bulk-add-todos` with folderPath: `/home/user/tasks`, clearAll: true
 - MCP server responds: `✅ Created 10 todos`
 
 **2. Orchestrator gets next task ID** 
@@ -123,9 +149,12 @@ npm install -g mini-todo-list-mcp
 - Orchestrator calls `get-next-todo-id` again
 - Process repeats until no more todos remain
 
-This orchestrator pattern works by having one LLM coordinate the overall project while specialized CODE agents handle the actual implementation. The orchestrator never sees file content—it only manages task IDs and creates subtasks. Each CODE agent gets complete context for one specific task and does the real work: writing code, creating files, implementing features, or refactoring components. This separation dramatically reduces token usage while ensuring perfect task isolation.
+This orchestrator pattern works by having one LLM coordinate the overall project while specialized CODE agents handle the actual implementation. The orchestrator follows stored rules (via `get-rules`) to maintain consistent behavior and never sees file content—it only manages task IDs and creates subtasks. Each CODE agent gets complete context for one specific task and does the real work: writing code, creating files, implementing features, or refactoring components. This separation dramatically reduces token usage while ensuring perfect task isolation.
 
 ### Key Benefits
+- **Rule-based consistency**: Orchestrator behavior stored in MCP server, retrieved with `get-rules`
+- **Cognitive load isolation**: Orchestrator rules separate from agent task instructions  
+- **Faster tool calling**: MCP tools faster than file reading, simpler than complex instructions
 - **Minimal tokens**: Orchestrator only gets task IDs for coordination, not full file content
 - **No state tracking**: MCP server remembers all progress, LLMs don't need to track anything
 - **Perfect isolation**: Each CODE mode subtask gets complete context without pollution
@@ -189,7 +218,8 @@ This direct approach has one LLM handle the entire workflow from start to finish
 **The MCP Solution:**
 
 - ✅ **Automatic file operations** - MCP server reads folders, parses files, creates tasks
-- ✅ **Persistent workflow memory** - MCP server tracks all progress, never loses state
+- ✅ **Persistent workflow memory** - MCP server tracks all progress, never loses state  
+- ✅ **Rule-based orchestration** - Behavioral instructions stored and retrieved via `add-rules`/`get-rules`
 - ✅ **Simple tool interface** - LLMs just call tools, MCP server does all the work
 - ✅ **Embedded context** - Full file content delivered in each response
 
@@ -210,6 +240,10 @@ Automatically processes **60+ file types** including:
 
 Add to Claude Desktop config and try:
 
+**For Orchestrator + Agent Workflow:**
+- "Use add-rules with filePath /home/user/orchestrator-rules.md and clearAll true, then use get-rules and follow the rules verbatim"
+
+**For Direct Workflow:**
 - "Use bulk-add-todos with folderPath /home/user/my-project"
 - "Use get-next-todo"
 
