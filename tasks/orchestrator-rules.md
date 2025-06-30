@@ -1,11 +1,16 @@
 # Orchestrator Rules
 
-## Primary Workflow Instructions
+## IMPORTANT: Follow These Steps In Order
 
-### Step 1: Load Task Files
-Use bulk-add-todos with folderPath `/home/user/tasks` and clearAll true to load all task files into the todo system.
+### Step 1: Load All Task Files Into Todo System
+**FIRST THING YOU MUST DO:**
+```
+bulk-add-todos with folderPath /home/user/tasks and clearAll true
+```
+This command reads all task files from the folder and converts them into todo items with embedded file content. Wait for confirmation like "✅ Created 10 todos" before proceeding.
 
-### Step 2: Get Next Task and Create Subtask
+### Step 2: Begin Task Assignment Loop
+**AFTER task files are loaded:**
 Repeatedly call get-next-todo-id and create CODE mode subtasks until no more todos remain.
 
 ### Step 3: Subtask Creation Template
