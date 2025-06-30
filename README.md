@@ -99,11 +99,10 @@ npm install -g mini-todo-list-mcp
 2. **You create orchestrator rules file** that includes these key instructions:
    - Step 1: `bulk-add-todos with folderPath /home/user/tasks and clearAll true`
    - Step 2: Loop through `get-next-todo-id` and create CODE mode subtasks
-   - Step 3: Use specific subtask template for CODE mode agents
    
    See complete example: [/tasks/orchestrator-rules.md](https://github.com/ChrisColeTech/mini-todo-list-mcp/blob/main/tasks/orchestrator-rules.md)
 
-3. **You tell the orchestrator LLM**:
+3. **You give the orchestrator this simple instruction**:
    ```
    "Use add-rules with filePath c:/path/to/orchestrator-rules.md and clearAll true, 
    then use get-rules and follow the rules verbatim."
