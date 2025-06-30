@@ -22,8 +22,14 @@ import {
   BulkAddTodosSchema
 } from "./models/Todo.js";
 
+import {
+  AddRulesSchema,
+  GetRulesSchema
+} from "./models/Rule.js";
+
 // Import services
 import { todoService } from "./services/TodoService.js";
+import { ruleService } from "./services/RuleService.js";
 import { databaseService } from "./services/DatabaseService.js";
 
 // Import utilities
@@ -348,6 +354,103 @@ server.tool(
     }
 
     return createSuccessResponse(`✅ Cleared ${result} todos from the database.`);
+  }
+);
+
+/**
+ * Tool 10: Add rules from file
+ */
+server.tool(
+  "add-rules",
+  "Add rules by reading content from a file",
+  {
+    filePath: z.string().min(1, "File path is required"),
+    clearAll: z.boolean().optional().default(false),
+  },
+  async ({ filePath, clearAll }) => {
+    const result = await safeExecute(async () => {
+      const validatedData = AddRulesSchema.parse({ filePath, clearAll });
+      const createdRules = await ruleService.addRules(validatedData);
+      
+      const clearMessage = clearAll ? " (after clearing all existing rules)" : "";
+      return {
+        ruleCount: createdRules.length,
+        summary: `Created ${createdRules.length} rule from ${filePath}${clearMessage}`
+      };
+    }, "Failed to add rules");
+
+    if (result instanceof Error) {
+      return createErrorResponseWithUsage(
+        "add-rules",
+        result.message,
+        `Parameters required:
+- filePath (string): Absolute path to file containing rule content
+- clearAll (boolean, optional): Whether to clear existing rules first (default: false)
+
+Example: add-rules with filePath: "/home/user/rules.txt", clearAll: false`
+      );
+    }
+
+    const { ruleCount, summary } = result;
+    return createSuccessResponse(`✅ ${summary}`);
+  }
+);
+
+/**
+ * Tool 11: Get rules
+ */
+server.tool(
+  "get-rules",
+  "Get all rules or a specific rule by ID",
+  {
+    id: z.number().int().positive("Invalid Rule ID").optional(),
+  },
+  async ({ id }) => {
+    const result = await safeExecute(() => {
+      const validatedData = GetRulesSchema.parse({ id });
+      const rules = ruleService.getRules(validatedData);
+      
+      if (rules.length === 0) {
+        if (id) {
+          return `No rule found with ID ${id}`;
+        } else {
+          return "No rules found";
+        }
+      }
+
+      if (id) {
+        const rule = rules[0];
+        return `**Rule ${rule.id}**
+Created: ${rule.createdAt}
+${rule.filePath ? `Source: ${rule.filePath}` : ''}
+
+${rule.description}`;
+      } else {
+        return rules.map(rule => 
+          `**Rule ${rule.id}**
+Created: ${rule.createdAt}
+${rule.filePath ? `Source: ${rule.filePath}` : ''}
+
+${rule.description}
+---`
+        ).join('\n');
+      }
+    }, "Failed to get rules");
+
+    if (result instanceof Error) {
+      return createErrorResponseWithUsage(
+        "get-rules",
+        result.message,
+        `Parameter optional:
+- id (number, optional): The unique rule ID to retrieve. If not provided, returns all rules.
+
+Examples: 
+- get-rules (returns all rules)
+- get-rules with id: 5 (returns rule with ID 5)`
+      );
+    }
+
+    return createSuccessResponse(result);
   }
 );
 

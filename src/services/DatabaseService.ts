@@ -42,6 +42,17 @@ class DatabaseService {
       )
     `);
 
+    // Create rules table if it doesn't exist
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS rules (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        description TEXT NOT NULL,
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT NOT NULL,
+        filePath TEXT NULL
+      )
+    `);
+
     // Add new columns for migration (same as full version)
     try {
       this.db.exec(`ALTER TABLE todos ADD COLUMN filePath TEXT NULL`);
