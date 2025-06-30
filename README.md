@@ -115,7 +115,8 @@ npm install -g mini-todo-list-mcp
 - Orchestrator calls `get-rules` to retrieve complete workflow instructions from MCP server
 
 **2. Orchestrator follows rules to load tasks**
-- Following the rules, orchestrator calls `bulk-add-todos` with folderPath: `/home/user/tasks`, clearAll: true
+- Following Step 1 in the rules: "FIRST THING YOU MUST DO: bulk-add-todos with folderPath /home/user/tasks and clearAll true"
+- Orchestrator calls `bulk-add-todos` with folderPath: `/home/user/tasks`, clearAll: true
 - MCP server responds: `✅ Created 10 todos`
 
 **3. Orchestrator gets next task ID** 
