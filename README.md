@@ -61,27 +61,27 @@ npm install -g mini-todo-list-mcp
 ### 📝 Task Creation
 | Tool | Parameters | Purpose |
 |------|------------|--------|
-| `create-todo` | `title` (required): Task name<br>`description` (required): Task details<br>`filePath` (optional): File to embed | Create single task |
-| `bulk-add-todos` | `folderPath` (required): Directory to scan<br>`clearAll` (optional): Clear existing todos first | Create tasks from folder |
+| `create-todo` | `title` (required): Task name<br>`description` (required): Task details<br>`filePath` (optional): File to embed | Creates single todo with auto-assigned task number. If filePath provided, embeds entire file content in description |
+| `bulk-add-todos` | `folderPath` (required): Directory to scan<br>`clearAll` (optional): Clear existing todos first | Recursively scans folder, creates one todo per file with embedded content. Adds to existing todos unless clearAll=true |
 
 ### 🔍 Task Retrieval  
 | Tool | Parameters | Purpose |
 |------|------------|--------|
-| `get-next-todo` | No parameters | Get next task to work on |
-| `get-todo` | `id` (required): Todo ID number | Get specific task details |
-| `get-next-todo-id` | No parameters | Get next task ID only |
+| `get-next-todo` | No parameters | Returns next incomplete todo with full content (lowest task number, status != 'Done') |
+| `get-todo` | `id` (required): Todo ID number | Returns specific todo with full content including embedded file content |
+| `get-next-todo-id` | No parameters | Returns only ID and task number of next incomplete todo (no content) |
 
 ### ✏️ Task Management
 | Tool | Parameters | Purpose |
 |------|------------|--------|
-| `update-todo` | `id` (required): Todo ID number<br>`title` (optional): New task name<br>`description` (optional): New task details | Modify existing task |
-| `complete-todo` | `id` (required): Todo ID number | Mark task as done |
-| `delete-todo` | `id` (required): Todo ID number | Remove task permanently |
+| `update-todo` | `id` (required): Todo ID number<br>`title` (optional): New task name<br>`description` (optional): New task details | Updates existing todo. At least one field (title or description) required |
+| `complete-todo` | `id` (required): Todo ID number | Marks todo as completed (status='Done', sets completedAt timestamp) |
+| `delete-todo` | `id` (required): Todo ID number | Permanently removes todo from database |
 
 ### 🗂️ Bulk Operations
 | Tool | Parameters | Purpose |
 |------|------------|--------|
-| `clear-all-todos` | No parameters | Start fresh |
+| `clear-all-todos` | No parameters | Deletes all todos from database (returns count of deleted items) |
 
 ### 📋 Rules Management
 | Tool | Parameters | Purpose |
