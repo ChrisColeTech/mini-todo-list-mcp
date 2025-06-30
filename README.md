@@ -92,62 +92,51 @@ npm install -g mini-todo-list-mcp
 ## 🎯 Real Orchestrator + Agent Workflow (Roo Code/Cline)
 
 ### Setup
-1. **You create orchestrator rules file** with workflow instructions:
-   ```markdown
-   # Orchestrator Rules
-
-   ## Primary Workflow
-   1. Use bulk-add-todos with folderPath /home/user/tasks and clearAll true
-   2. Repeatedly call get-next-todo-id and create CODE mode subtasks until no more todos
-   3. For each subtask, tell CODE mode: "Call get-todo with id X, complete the task, call complete-todo with id X"
-   4. Never directly implement code - only coordinate and delegate to CODE mode agents
-   5. Focus on task IDs and delegation, not file content
-
-   ## Task Assignment Rules
-   - One task per CODE mode agent
-   - Each agent gets complete context through get-todo
-   - Agents handle: file creation, code writing, implementation, testing
-   - You handle: coordination, progress tracking, next task assignment
-   ```
-
-2. **You create task files** with complete instructions for each piece of work:
+1. **You create task files** with complete instructions for each piece of work:
    
    See example task files: [/tasks/](https://github.com/ChrisColeTech/mini-todo-list-mcp/tree/main/tasks)
 
+2. **You create orchestrator rules file** with workflow instructions:
+   
+   See example orchestrator rules: [/tasks/orchestrator-rules.md](https://github.com/ChrisColeTech/mini-todo-list-mcp/blob/main/tasks/orchestrator-rules.md)
+
 3. **You tell the orchestrator LLM**:
    ```
-   "Use add-rules with filePath /home/user/orchestrator-rules.md and clearAll true.
-   Then use get-rules and follow the rules verbatim."
+   "Use add-rules with filePath c:/path/to/orchestrator-rules.md and clearAll true, 
+   then use get-rules and follow the rules verbatim."
    ```
 
-   The orchestrator loads its behavioral rules, then coordinates work by getting task IDs and delegating actual implementation work to specialized CODE mode agents.
+   The orchestrator loads its behavioral rules from the MCP server, then coordinates work by getting task IDs and delegating actual implementation work to specialized CODE mode agents.
 
 ### Execution Flow
 
-**1. Orchestrator loads rules and tasks**
-- Orchestrator calls `add-rules` with filePath: `/home/user/orchestrator-rules.md`, clearAll: true
-- Orchestrator calls `get-rules` to retrieve behavioral instructions
-- Orchestrator calls `bulk-add-todos` with folderPath: `/home/user/tasks`, clearAll: true
+**1. Orchestrator loads behavioral rules**
+- Orchestrator calls `add-rules` with filePath: `c:/path/to/orchestrator-rules.md`, clearAll: true
+- Orchestrator calls `get-rules` to retrieve complete workflow instructions from MCP server
+
+**2. Orchestrator follows rules to load tasks**
+- Following the rules, orchestrator calls `bulk-add-todos` with folderPath: `/home/user/tasks`, clearAll: true
 - MCP server responds: `✅ Created 10 todos`
 
-**2. Orchestrator gets next task ID** 
-- Orchestrator calls `get-next-todo-id`
+**3. Orchestrator gets next task ID** 
+- Following the rules, orchestrator calls `get-next-todo-id`
 - MCP server responds: `ID: 1, Task Number: 1`
 
-**3. Orchestrator creates subtask for CODE mode**
-- Orchestrator creates subtask: "Call get-todo with id 1, complete the task, call complete-todo with id 1"
+**4. Orchestrator creates subtask using rules template**
+- Using the message template from the rules, orchestrator creates subtask:
+- "Call get-todo with id 1, read the complete task instructions and file content, then implement all required changes by creating files, writing code, or making modifications as specified in the task. When the implementation is complete, call complete-todo with id 1."
 - Subtask is assigned to CODE mode LLM
 
-**4. CODE mode completes the actual work**
+**5. CODE mode completes the actual work**
 - CODE mode calls `get-todo` with id: 1  
 - MCP server returns full todo item with embedded file content and detailed instructions
 - CODE mode executes the task by: creating new files, writing actual code, implementing features, refactoring existing code, adding tests, or whatever specific work the task requires
 - CODE mode calls `complete-todo` with id: 1
 - CODE mode returns "subtask complete" to orchestrator
 
-**5. Process repeats until done**
-- Orchestrator calls `get-next-todo-id` again
-- Process repeats until no more todos remain
+**6. Process repeats until done**
+- Orchestrator calls `get-next-todo-id` again following the rules
+- Process repeats until `get-next-todo-id` returns "All todos have been completed"
 
 This orchestrator pattern works by having one LLM coordinate the overall project while specialized CODE agents handle the actual implementation. The orchestrator follows stored rules (via `get-rules`) to maintain consistent behavior and never sees file content—it only manages task IDs and creates subtasks. Each CODE agent gets complete context for one specific task and does the real work: writing code, creating files, implementing features, or refactoring components. This separation dramatically reduces token usage while ensuring perfect task isolation.
 
@@ -241,7 +230,7 @@ Automatically processes **60+ file types** including:
 Add to Claude Desktop config and try:
 
 **For Orchestrator + Agent Workflow:**
-- "Use add-rules with filePath /home/user/orchestrator-rules.md and clearAll true, then use get-rules and follow the rules verbatim"
+- "Use add-rules with filePath c:/path/to/orchestrator-rules.md and clearAll true, then use get-rules and follow the rules verbatim"
 
 **For Direct Workflow:**
 - "Use bulk-add-todos with folderPath /home/user/my-project"
