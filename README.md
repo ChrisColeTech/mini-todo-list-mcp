@@ -86,8 +86,8 @@ npm install -g mini-todo-list-mcp
 ### 📋 Rules Management
 | Tool | Parameters | Purpose |
 |------|------------|--------|
-| `add-rules` | `filePath` (required): Path to rules file<br>`clearAll` (optional): Clear existing rules first | Load orchestrator rules from file |
-| `get-rules` | `id` (optional): Specific rule ID | Retrieve orchestrator instructions |
+| `add-rules` | `filePath` (required): Path to rules file<br>`clearAll` (optional): Clear existing rules first | Reads entire file content and stores as single rule |
+| `get-rules` | `id` (optional): Specific rule ID | Returns all rules combined (no ID) or single rule (with ID) |
 
 ## 🎯 Real Orchestrator + Agent Workflow (Roo Code/Cline)
 
